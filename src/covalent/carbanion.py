@@ -48,7 +48,7 @@ import os, json, textwrap
 # ─────────────────────────────────────────────────────────────────────────────
 
 psi4.set_memory("4 GB")
-psi4.set_num_threads(4)
+psi4.set_num_threads(20)
 
 # Output file — set to None to print to stdout
 PSI4_OUTPUT = "psi4_warhead.out"
@@ -108,6 +108,41 @@ def make_psi4_mol(xyz_block: str, charge: int, multiplicity: int) -> psi4.core.M
 # 3.  Core computation functions
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Psi4 calculates harmonic vibrational frequencies using the frequency() (or frequencies(), freq()) command, 
+# which computes the Hessian matrix (second derivatives of energy with respect to nuclear coordinates) 
+# and performs thermochemical analysis. 
+# The command is a wrapper for hessian(), usually run after a geometry optimization 
+# to ensure the structure is at a local minimum. 
+
+
+def is_saddle_point(wfn: psi4.core.Wavefunction) -> bool:
+    """
+    Check if the optimized geometry is a saddle point (TS) by counting imaginary frequencies.
+
+    Returns
+    -------
+    bool
+        True if exactly one imaginary frequency is present, indicating a TS.
+    """
+    freqs = wfn.frequencies().to_array()
+    num_imaginary = np.sum(freqs < 0)
+    return num_imaginary == 1
+
+
+def is_local_minimum(wfn: psi4.core.Wavefunction) -> bool:
+    """
+    Check if the optimized geometry is a minimum by ensuring no imaginary frequencies.
+
+    Returns
+    -------
+    bool
+        True if all frequencies are real (≥ 0), indicating a minimum.
+    """
+    freqs = wfn.frequencies().to_array()
+    num_imaginary = np.sum(freqs < 0)
+    return num_imaginary == 0
+
+
 def optimize_geometry(mol: psi4.core.Molecule,
                       method: str = OPT_METHOD,
                       basis: str  = OPT_BASIS,
@@ -128,26 +163,123 @@ def optimize_geometry(mol: psi4.core.Molecule,
         "dft_dispersion_parameters": [dispersion],   # activates D3(BJ)
         "geom_maxiter": 200,
         "g_convergence": "gau_tight",
-        "freq_scale_factor": 0.970,  # B3LYP/6-31G(d) scale factor
-        "temperature": TEMPERATURE,
     })
 
     # Optimise then compute frequencies
-    E_opt, wfn = psi4.optimize(f"{method}/{basis}", molecule=mol,
-                                return_wfn=True)
+    E_opt, wfn = psi4.optimize(f"{method}/{basis}", molecule=mol, return_wfn=True)
 
-    # Frequency calculation for thermochemistry
-    E_freq, wfn_freq = psi4.frequency(f"{method}/{basis}", molecule=mol,
-                                       return_wfn=True)
+    # Frequency analysis, reusing gradient from optimization
+    # It is slow, but we need it to get ZPE and thermal corrections for ΔG.
+    # In Psi4, frequency analysis is essential to convert a single-point electronic energy 
+    # into a useful thermodynamic energy at finite temperatures (K). 
+    # It calculates vibrational frequencies to determine the 
+    # [Zero-Point Vibrational Energy (ZPVE)] and thermal contributions to enthalpy and Gibbs free energy.
 
-    thermo = wfn_freq.frequency_analysis
-    ZPE    = thermo["ZPE_corr"].get()            # Hartree
-    H_corr = thermo["Hcorr"].get()               # Hartree  (H - E_elec)
-    G_corr = thermo["Gcorr"].get()               # Hartree  (G - E_elec)
+    E_freq, wfn_freq = psi4.frequency(
+        f"{method}/{basis}", 
+        molecule=mol,
+        return_wfn=True,
+        ref_gradient=wfn.gradient(),
+    )
 
+    # Scale frequencies (only positive/real ones)
+    SCALE_FACTOR = 0.970
+    raw_freqs = wfn_freq.frequencies().to_array()
+    scaled_freqs = np.where(raw_freqs > 0, raw_freqs * SCALE_FACTOR, raw_freqs)
+
+    # Apply scaled frequencies or fall back to scaling the Hessian
+    try:
+        wfn_freq.set_frequencies(psi4.core.Vector.from_array(scaled_freqs))
+        psi4.vibanal_wfn(wfn_freq, temperature=TEMPERATURE)
+    except AttributeError:
+        H_orig = np.array(wfn_freq.hessian())
+        H_scaled_psi = psi4.core.Matrix.from_array(H_orig * (SCALE_FACTOR ** 2))
+        wfn_freq.set_hessian(H_scaled_psi)
+        psi4.vibanal_wfn(wfn_freq, temperature=TEMPERATURE)
+
+    # Extract thermochemical quantities
+    thermo  = wfn_freq.frequency_analysis
+    ZPE     = thermo["ZPE_vib"].data
+    H_corr  = thermo["Hcorr"].data
+    G_corr  = thermo["Gcorr"].data
+
+    E_zpe   = E_freq + ZPE
+    H_total = E_freq + H_corr
     G_total = E_freq + G_corr
+    TS      = H_total - G_total
+    S       = (TS / TEMPERATURE) * 627.509 * 4184  # J/mol/K
+
+    print(f"E_elec  = {E_freq:.6f}  Hartree")
+    print(f"E_zpe   = {E_zpe:.6f}  Hartree")
+    print(f"H({TEMPERATURE}K) = {H_total:.6f}  Hartree")
+    print(f"G({TEMPERATURE}K) = {G_total:.6f}  Hartree")
+    print(f"TS      = {TS * HARTREE_TO_KCAL:.4f}  kcal/mol")
 
     return E_freq, G_total, ZPE
+
+    # # Run frequency analysis, passing temperature directly as a keyword arg
+    # E_freq, wfn_freq = psi4.frequency(f"{method}/{basis}", molecule=mol, return_wfn=True, temperature=TEMPERATURE)
+
+    # # Psi4 does not natively scale frequencies before computing thermochemistry, 
+    # # so if you need scaled ZPE/enthalpy, you'd need to recompute thermochemical 
+    # # quantities manually using the scaled frequencies
+
+    # # Apply freq scale factor manually after the fact
+    # SCALE_FACTOR = 0.970 # B3LYP/6-31G(d) scale factor
+    # raw_freqs = wfn_freq.frequencies().to_array()  # in cm^-1
+    # # Only scale real (positive) frequencies
+    # scaled_freqs = np.where(raw_freqs > 0, raw_freqs * SCALE_FACTOR, raw_freqs)
+
+    # # Patch scaled frequencies back into the wavefunction
+    # scaled_freqs_psi = psi4.core.Vector.from_array(scaled_freqs)
+    # try:
+    #     wfn_freq.set_frequencies(scaled_freqs_psi)
+    # except AttributeError:
+    #     print("Warning: Could not set scaled frequencies in Psi4 wavefunction. Thermochemistry may be uncorrected.")
+    #     # In this case, the thermochemistry will be computed from the original (unscaled) frequencies.
+    #     # Re-run vibrational/thermochemical analysis using the scaled Hessian
+    #     # Scale the Hessian by SCALE_FACTOR^2 (since freq ∝ sqrt(k), scaling freq by s = scaling k by s^2)
+    #     H_orig = np.array(wfn_freq.hessian())                    # get original Hessian as numpy array
+    #     H_scaled = H_orig * (SCALE_FACTOR ** 2)                  # scale the force constants
+
+    #     # Convert back to psi4.Matrix and set it in the wavefunction
+    #     H_scaled_psi = psi4.core.Matrix.from_array(H_scaled)
+    #     wfn_freq.set_hessian(H_scaled_psi)
+
+    # # Recompute thermochemistry with scaled frequencies
+    # psi4.vibanal_wfn(wfn_freq, temperature=TEMPERATURE)
+
+    # # Now extract corrected thermochemical quantities
+    # thermo = wfn_freq.frequency_analysis
+
+    # ZPE    = thermo["ZPE_vib"].data   # Zero-point energy correction (Hartree)
+    # H_corr = thermo["Hcorr"].data     # Enthalpy correction H - E_elec (Hartree)
+    # G_corr = thermo["Gcorr"].data     # Gibbs correction G - E_elec (Hartree)
+
+    # # thermo = wfn_freq.frequency_analysis
+    # # ZPE    = thermo["ZPE_corr"].get()            # Hartree
+    # # H_corr = thermo["Hcorr"].get()               # Hartree  (H - E_elec)
+    # # G_corr = thermo["Gcorr"].get()               # Hartree  (G - E_elec)
+
+    # E_elec  = E_freq                      # Pure electronic energy
+    # E_zpe   = E_freq + ZPE                # Electronic + zero-point energy
+    # H_total = E_freq + H_corr             # Total enthalpy at temperature T
+    # G_total = E_freq + G_corr             # Total Gibbs free energy at temperature T
+
+    # # Entropy contribution (T*S = H - G)
+    # TS = H_total - G_total                # Hartree
+    # T  = TEMPERATURE                      # K
+    # S  = (TS / T) * 627.509 * 4184        # J/mol/K  (optional)
+
+    # print(f"E_elec  = {E_elec:.6f}  Hartree")
+    # print(f"E_zpe   = {E_zpe:.6f}  Hartree")
+    # print(f"H({T}K) = {H_total:.6f}  Hartree")
+    # print(f"G({T}K) = {G_total:.6f}  Hartree")
+    # print(f"TS      = {TS*HARTREE_TO_KCAL:.4f}  kcal/mol")
+
+    # G_total = E_freq + G_corr
+
+    # return E_freq, G_total, ZPE
 
 
 def single_point_energy(mol: psi4.core.Molecule,
