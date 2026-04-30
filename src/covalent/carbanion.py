@@ -39,6 +39,8 @@ Requirements:
 
 import psi4
 import numpy as np
+from .thermodynamics import Gibbs_free_energy
+
 from dataclasses import dataclass, field
 from typing import Optional
 import os, json, textwrap
@@ -353,14 +355,22 @@ def compute_carbanion_descriptors(
     # ── Neutral molecule ──────────────────────────────────────────────────
     print("  [1/4] Optimising neutral molecule …")
     mol_neutral = make_psi4_mol(neutral_xyz, charge=0, multiplicity=1)
-    E_neut, G_neut, _ = optimize_geometry(mol_neutral)
+    G_neut = Gibbs_free_energy(mol_neutral, 
+                                scale_factor=0.970, 
+                                functional=OPT_METHOD, 
+                                basis=OPT_BASIS, 
+                                temperature=TEMPERATURE)
     desc.G_neutral = G_neut
 
     # ── Anion (β-carbanion, charge = -1) ─────────────────────────────────
     print("  [2/4] Optimising β-carbanion (charge=-1) …")
     start_xyz = anion_xyz if anion_xyz else neutral_xyz
     mol_anion = make_psi4_mol(start_xyz, charge=-1, multiplicity=1)
-    E_anion, G_anion, _ = optimize_geometry(mol_anion)
+    G_anion = Gibbs_free_energy(mol_anion, 
+                                scale_factor=0.970, 
+                                functional=OPT_METHOD, 
+                                basis=OPT_BASIS, 
+                                temperature=TEMPERATURE)
     desc.G_anion = G_anion
 
     # ── ΔG_carbanion ─────────────────────────────────────────────────────
@@ -424,7 +434,11 @@ def compute_proton_affinity(
     if desc.G_neutral is None:
         print("  [1/2] Optimising neutral molecule …")
         mol_neutral = make_psi4_mol(neutral_xyz, charge=0, multiplicity=1)
-        _, G_neut, _ = optimize_geometry(mol_neutral)
+        G_neut = Gibbs_free_energy(mol_neutral, 
+                                    scale_factor=0.970, 
+                                    functional=OPT_METHOD, 
+                                    basis=OPT_BASIS, 
+                                    temperature=TEMPERATURE)
         desc.G_neutral = G_neut
     else:
         print("  [1/2] Re-using previously computed G(neutral) …")
@@ -434,7 +448,11 @@ def compute_proton_affinity(
     print("  [2/2] Optimising protonated species (charge=+1) …")
     start_xyz = protonated_xyz if protonated_xyz else neutral_xyz
     mol_prot = make_psi4_mol(start_xyz, charge=+1, multiplicity=1)
-    _, G_prot, _ = optimize_geometry(mol_prot)
+    G_prot = Gibbs_free_energy(mol_prot, 
+                                scale_factor=0.970, 
+                                functional=OPT_METHOD, 
+                                basis=OPT_BASIS, 
+                                temperature=TEMPERATURE)
     desc.G_protonated = G_prot
 
     # PA (proton affinity)

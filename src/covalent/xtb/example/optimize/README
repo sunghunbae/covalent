@@ -1,0 +1,1 @@
+$ xtb atorvastatin.xyz --charge 0 -o normal --gfn 2 --json --alpb water
