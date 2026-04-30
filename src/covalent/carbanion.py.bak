@@ -1,17 +1,20 @@
 """
+=============================================================================
+Covalent Warhead Reactivity Prediction via Psi4
+=============================================================================
 Calculates quantum chemical descriptors correlated with Michael addition
 reaction energy barriers for cysteine-targeting electrophilic warheads:
 
-  1. Carbanion Formation Free Energy (ΔG_carbanion)   — anion at alpha carbon
+  1. Carbanion Formation Free Energy (ΔG_carbanion)   — anion at β-carbon
   2. Carbanion Formation Single-Point Energy (ΔE_SP)  — fast screening proxy
-  3. Proton Affinity (PA)                             — alpha-carbon basicity
+  3. Proton Affinity (PA)                              — β-carbon basicity
 
 Theory:
-  - Michael addition of Cys-SH (Cys-S-) to an a,b-unsaturated warhead proceeds 
-    via nucleophilic attack at the b-carbon (conjugate addition).
-  - The a-carbanion intermediate energy correlates with the TS barrier
+  - Michael addition of Cys-SH to an α,β-unsaturated warhead proceeds via
+    nucleophilic attack at the β-carbon (conjugate addition).
+  - The β-carbanion intermediate energy correlates with the TS barrier
     (Hammond postulate / BEP relationship).
-  - Proton affinity of the a-carbon also correlates because both reflect
+  - Proton affinity of the β-carbon also correlates because both reflect
     the intrinsic electrophilicity / LUMO character at that site.
 
 Reference workflow per warhead molecule (neutral form):
@@ -24,6 +27,13 @@ Reference workflow per warhead molecule (neutral form):
   PA            = G(protonated) - G(neutral) - G(H+)   [proton affinity]
 
   G(H+) at 298 K = -6.28 kcal/mol  (translational only, Sackur-Tetrode)
+
+Usage:
+  python covalent_warhead_reactivity_psi4.py
+
+Requirements:
+  pip install psi4          # or conda install psi4 -c psi4
+  pip install rdkit
 =============================================================================
 """
 
@@ -70,7 +80,228 @@ G_PROTON_KCAL = -6.28           # standard state 1 atm
 
 HARTREE_TO_KCAL = 627.509474
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 2.  Helper: build Psi4 geometry string
+# ─────────────────────────────────────────────────────────────────────────────
 
+def make_psi4_mol(xyz_block: str, charge: int, multiplicity: int) -> psi4.core.Molecule:
+    """
+    Construct a Psi4 Molecule from an XYZ-format coordinate block.
+
+    Parameters
+    ----------
+    xyz_block : str
+        Atomic coordinates in XYZ format (element  x  y  z, one atom per line).
+        Do NOT include the line-count header or comment line — just coordinates.
+    charge : int
+        Total molecular charge (0 = neutral, -1 = anion, +1 = cation).
+    multiplicity : int
+        Spin multiplicity (1 = singlet, 2 = doublet, …).
+
+    Returns
+    -------
+    psi4.core.Molecule
+    """
+    mol_str = f"{charge} {multiplicity}\n{xyz_block.strip()}"
+    return psi4.geometry(mol_str)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3.  Core computation functions
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Psi4 calculates harmonic vibrational frequencies using the frequency() (or frequencies(), freq()) command, 
+# which computes the Hessian matrix (second derivatives of energy with respect to nuclear coordinates) 
+# and performs thermochemical analysis. 
+# The command is a wrapper for hessian(), usually run after a geometry optimization 
+# to ensure the structure is at a local minimum. 
+
+
+def is_saddle_point(wfn: psi4.core.Wavefunction) -> bool:
+    """
+    Check if the optimized geometry is a saddle point (TS) by counting imaginary frequencies.
+
+    Returns
+    -------
+    bool
+        True if exactly one imaginary frequency is present, indicating a TS.
+    """
+    freqs = wfn.frequencies().to_array()
+    num_imaginary = np.sum(freqs < 0)
+    return num_imaginary == 1
+
+
+def is_local_minimum(wfn: psi4.core.Wavefunction) -> bool:
+    """
+    Check if the optimized geometry is a minimum by ensuring no imaginary frequencies.
+
+    Returns
+    -------
+    bool
+        True if all frequencies are real (≥ 0), indicating a minimum.
+    """
+    freqs = wfn.frequencies().to_array()
+    num_imaginary = np.sum(freqs < 0)
+    return num_imaginary == 0
+
+
+def optimize_geometry(mol: psi4.core.Molecule,
+                      method: str = OPT_METHOD,
+                      basis: str  = OPT_BASIS,
+                      dispersion: str = OPT_DISPERSION
+                      ) -> tuple[float, float, float]:
+    """
+    Run geometry optimisation + frequency analysis to obtain thermochemistry.
+
+    Returns
+    -------
+    (E_electronic_hartree, G_total_hartree, ZPE_hartree)
+        E  — SCF / DFT electronic energy at the optimised geometry
+        G  — Gibbs free energy (electronic + ZPE + thermal + entropy)
+        ZPE — zero-point vibrational energy
+    """
+    psi4.set_options({
+        "basis": basis,
+        "dft_dispersion_parameters": [dispersion],   # activates D3(BJ)
+        "geom_maxiter": 200,
+        "g_convergence": "gau_tight",
+    })
+
+    # Optimise then compute frequencies
+    E_opt, wfn = psi4.optimize(f"{method}/{basis}", molecule=mol, return_wfn=True)
+
+    # Frequency analysis, reusing gradient from optimization
+    # It is slow, but we need it to get ZPE and thermal corrections for ΔG.
+    # In Psi4, frequency analysis is essential to convert a single-point electronic energy 
+    # into a useful thermodynamic energy at finite temperatures (K). 
+    # It calculates vibrational frequencies to determine the 
+    # [Zero-Point Vibrational Energy (ZPVE)] and thermal contributions to enthalpy and Gibbs free energy.
+
+    E_freq, wfn_freq = psi4.frequency(
+        f"{method}/{basis}", 
+        molecule=mol,
+        return_wfn=True,
+        ref_gradient=wfn.gradient(),
+    )
+
+    # Scale frequencies (only positive/real ones)
+    SCALE_FACTOR = 0.970
+    raw_freqs = wfn_freq.frequencies().to_array()
+    scaled_freqs = np.where(raw_freqs > 0, raw_freqs * SCALE_FACTOR, raw_freqs)
+
+    # Apply scaled frequencies or fall back to scaling the Hessian
+    try:
+        wfn_freq.set_frequencies(psi4.core.Vector.from_array(scaled_freqs))
+        psi4.vibanal_wfn(wfn_freq, temperature=TEMPERATURE)
+    except AttributeError:
+        H_orig = np.array(wfn_freq.hessian())
+        H_scaled_psi = psi4.core.Matrix.from_array(H_orig * (SCALE_FACTOR ** 2))
+        wfn_freq.set_hessian(H_scaled_psi)
+        psi4.vibanal_wfn(wfn_freq, temperature=TEMPERATURE)
+
+    # Extract thermochemical quantities
+    thermo  = wfn_freq.frequency_analysis
+    ZPE     = thermo["ZPE_vib"].data
+    H_corr  = thermo["Hcorr"].data
+    G_corr  = thermo["Gcorr"].data
+
+    E_zpe   = E_freq + ZPE
+    H_total = E_freq + H_corr
+    G_total = E_freq + G_corr
+    TS      = H_total - G_total
+    S       = (TS / TEMPERATURE) * 627.509 * 4184  # J/mol/K
+
+    print(f"E_elec  = {E_freq:.6f}  Hartree")
+    print(f"E_zpe   = {E_zpe:.6f}  Hartree")
+    print(f"H({TEMPERATURE}K) = {H_total:.6f}  Hartree")
+    print(f"G({TEMPERATURE}K) = {G_total:.6f}  Hartree")
+    print(f"TS      = {TS * HARTREE_TO_KCAL:.4f}  kcal/mol")
+
+    return E_freq, G_total, ZPE
+
+    # # Run frequency analysis, passing temperature directly as a keyword arg
+    # E_freq, wfn_freq = psi4.frequency(f"{method}/{basis}", molecule=mol, return_wfn=True, temperature=TEMPERATURE)
+
+    # # Psi4 does not natively scale frequencies before computing thermochemistry, 
+    # # so if you need scaled ZPE/enthalpy, you'd need to recompute thermochemical 
+    # # quantities manually using the scaled frequencies
+
+    # # Apply freq scale factor manually after the fact
+    # SCALE_FACTOR = 0.970 # B3LYP/6-31G(d) scale factor
+    # raw_freqs = wfn_freq.frequencies().to_array()  # in cm^-1
+    # # Only scale real (positive) frequencies
+    # scaled_freqs = np.where(raw_freqs > 0, raw_freqs * SCALE_FACTOR, raw_freqs)
+
+    # # Patch scaled frequencies back into the wavefunction
+    # scaled_freqs_psi = psi4.core.Vector.from_array(scaled_freqs)
+    # try:
+    #     wfn_freq.set_frequencies(scaled_freqs_psi)
+    # except AttributeError:
+    #     print("Warning: Could not set scaled frequencies in Psi4 wavefunction. Thermochemistry may be uncorrected.")
+    #     # In this case, the thermochemistry will be computed from the original (unscaled) frequencies.
+    #     # Re-run vibrational/thermochemical analysis using the scaled Hessian
+    #     # Scale the Hessian by SCALE_FACTOR^2 (since freq ∝ sqrt(k), scaling freq by s = scaling k by s^2)
+    #     H_orig = np.array(wfn_freq.hessian())                    # get original Hessian as numpy array
+    #     H_scaled = H_orig * (SCALE_FACTOR ** 2)                  # scale the force constants
+
+    #     # Convert back to psi4.Matrix and set it in the wavefunction
+    #     H_scaled_psi = psi4.core.Matrix.from_array(H_scaled)
+    #     wfn_freq.set_hessian(H_scaled_psi)
+
+    # # Recompute thermochemistry with scaled frequencies
+    # psi4.vibanal_wfn(wfn_freq, temperature=TEMPERATURE)
+
+    # # Now extract corrected thermochemical quantities
+    # thermo = wfn_freq.frequency_analysis
+
+    # ZPE    = thermo["ZPE_vib"].data   # Zero-point energy correction (Hartree)
+    # H_corr = thermo["Hcorr"].data     # Enthalpy correction H - E_elec (Hartree)
+    # G_corr = thermo["Gcorr"].data     # Gibbs correction G - E_elec (Hartree)
+
+    # # thermo = wfn_freq.frequency_analysis
+    # # ZPE    = thermo["ZPE_corr"].get()            # Hartree
+    # # H_corr = thermo["Hcorr"].get()               # Hartree  (H - E_elec)
+    # # G_corr = thermo["Gcorr"].get()               # Hartree  (G - E_elec)
+
+    # E_elec  = E_freq                      # Pure electronic energy
+    # E_zpe   = E_freq + ZPE                # Electronic + zero-point energy
+    # H_total = E_freq + H_corr             # Total enthalpy at temperature T
+    # G_total = E_freq + G_corr             # Total Gibbs free energy at temperature T
+
+    # # Entropy contribution (T*S = H - G)
+    # TS = H_total - G_total                # Hartree
+    # T  = TEMPERATURE                      # K
+    # S  = (TS / T) * 627.509 * 4184        # J/mol/K  (optional)
+
+    # print(f"E_elec  = {E_elec:.6f}  Hartree")
+    # print(f"E_zpe   = {E_zpe:.6f}  Hartree")
+    # print(f"H({T}K) = {H_total:.6f}  Hartree")
+    # print(f"G({T}K) = {G_total:.6f}  Hartree")
+    # print(f"TS      = {TS*HARTREE_TO_KCAL:.4f}  kcal/mol")
+
+    # G_total = E_freq + G_corr
+
+    # return E_freq, G_total, ZPE
+
+
+def single_point_energy(mol: psi4.core.Molecule,
+                        method: str = SP_METHOD,
+                        basis: str  = SP_BASIS) -> float:
+    """
+    Compute a single-point energy at a previously optimised geometry.
+
+    Returns
+    -------
+    float : electronic energy in Hartree
+    """
+    psi4.set_options({"basis": basis})
+    E_sp, _ = psi4.energy(f"{method}/{basis}", molecule=mol, return_wfn=True)
+    return E_sp
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 4.  Descriptor calculations
+# ─────────────────────────────────────────────────────────────────────────────
 
 @dataclass
 class ReactivityDescriptors:
@@ -164,6 +395,75 @@ def compute_carbanion_descriptors(
 
     return desc
 
+
+def compute_proton_affinity(
+        neutral_xyz:    str,
+        protonated_xyz: Optional[str] = None,
+        desc: Optional[ReactivityDescriptors] = None,
+        name: str = "warhead"
+) -> ReactivityDescriptors:
+    """
+    Calculate the proton affinity (PA) of the β-carbon.
+
+    PA = G(protonated) - G(neutral) - G(H+)
+
+    NOTE: The protonated species represents H+ addition to the β-carbon,
+    converting it from sp2 (alkene) to sp3, which mimics the reverse of
+    deprotonation.  A more negative PA ↔ higher β-carbon basicity ↔
+    greater susceptibility to nucleophilic addition (Michael acceptor).
+
+    Parameters
+    ----------
+    neutral_xyz : str
+        XYZ of the neutral molecule (can be pre-optimised coords).
+    protonated_xyz : str, optional
+        Initial XYZ for the β-carbon protonated form (charge=+1 for
+        overall neutral → +1; for anion → neutral).
+        Convention here: neutral warhead → add H+ → cation (+1).
+    desc : ReactivityDescriptors, optional
+        Existing descriptor object to update (avoids re-optimising neutral).
+    """
+    if desc is None:
+        desc = ReactivityDescriptors(name=name)
+
+    print(f"\n{'─'*60}")
+    print(f"  Proton Affinity: {name}")
+    print(f"{'─'*60}")
+
+    # ── Neutral (reuse if already computed) ──────────────────────────────
+    if desc.G_neutral is None:
+        print("  [1/2] Optimising neutral molecule …")
+        mol_neutral = make_psi4_mol(neutral_xyz, charge=0, multiplicity=1)
+        G_neut = Gibbs_free_energy(mol_neutral, 
+                                    scale_factor=0.970, 
+                                    functional=OPT_METHOD, 
+                                    basis=OPT_BASIS, 
+                                    temperature=TEMPERATURE)
+        desc.G_neutral = G_neut
+    else:
+        print("  [1/2] Re-using previously computed G(neutral) …")
+        G_neut = desc.G_neutral
+
+    # ── Protonated species ────────────────────────────────────────────────
+    print("  [2/2] Optimising protonated species (charge=+1) …")
+    start_xyz = protonated_xyz if protonated_xyz else neutral_xyz
+    mol_prot = make_psi4_mol(start_xyz, charge=+1, multiplicity=1)
+    G_prot = Gibbs_free_energy(mol_prot, 
+                                scale_factor=0.970, 
+                                functional=OPT_METHOD, 
+                                basis=OPT_BASIS, 
+                                temperature=TEMPERATURE)
+    desc.G_protonated = G_prot
+
+    # PA (proton affinity)
+    # Standard definition: PA = –ΔH_deprotonation ≈ –ΔG at β-carbon site
+    # Here computed as: ΔG_protonation = G(MH+) – G(M) – G(H+)
+    # A more negative value → stronger base / better Michael acceptor
+    PA = (G_prot - G_neut) * HARTREE_TO_KCAL - G_PROTON_KCAL
+    desc.proton_affinity_kcal = PA
+    print(f"  Proton Affinity (β-carbon) = {PA:.2f} kcal/mol")
+
+    return desc
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -349,6 +649,7 @@ if __name__ == "__main__":
     acrylamide = Geometry(smiles="C=CC(=O)N")
     acrylamide.optimize()
 
+
     acrylamide_carbanion = Geometry(smiles="[CH2-]CC(=O)N", charge=-1)
     acrylamide_carbanion.optimize()
 
@@ -360,3 +661,34 @@ if __name__ == "__main__":
         anion_xyz   = acrylamide_carbanion.xyz_block,
         name        = "Acrylamide"
     )
+    desc_acrylamide = compute_proton_affinity(
+        neutral_xyz    = acrylamide.xyz_block,
+        protonated_xyz = acrylamide_protonated.xyz_block,
+        desc           = desc_acrylamide,
+        name           = "Acrylamide"
+    )
+    desc_acrylamide = classify_reactivity(desc_acrylamide)
+    all_results.append(desc_acrylamide)
+
+    # ── Warhead 2: Vinyl Sulfone ──────────────────────────────────────────
+    print("\n" + "="*60)
+    print("  WARHEAD 2: Vinyl Sulfone")
+    print("="*60)
+
+    desc_vs = compute_carbanion_descriptors(
+        neutral_xyz = VINYL_SULFONE_XYZ,
+        anion_xyz   = VINYL_SULFONE_XYZ,   # use neutral as anion starting guess
+        name        = "Vinyl Sulfone"
+    )
+    # Proton affinity for vinyl sulfone (protonated XYZ not shown; use neutral)
+    desc_vs = compute_proton_affinity(
+        neutral_xyz    = VINYL_SULFONE_XYZ,
+        protonated_xyz = VINYL_SULFONE_XYZ,
+        desc           = desc_vs,
+        name           = "Vinyl Sulfone"
+    )
+    desc_vs = classify_reactivity(desc_vs)
+    all_results.append(desc_vs)
+
+    # ── Final Report ──────────────────────────────────────────────────────
+    print_report(all_results)

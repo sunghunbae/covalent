@@ -2,7 +2,10 @@ import psi4
 from covalent import Geometry
 
 
-def electrophilicity_index(geometry: Geometry, method: str = 'b3lyp', basis: str = '6-31G*', solvent: str = None):
+def electrophilicity_index(geometry: Geometry, 
+                           functional: str = 'b3lyp', 
+                           basis: str = '6-31G*', 
+                           solvent: str = None):
     """
     Compute Global Electrophilicity Index following BI 2019/2020 protocol.
     
@@ -42,7 +45,7 @@ def electrophilicity_index(geometry: Geometry, method: str = 'b3lyp', basis: str
 
     # Run geometry optimization first
     psi4.set_options({'geom_maxiter': 200})
-    energy, wfn = psi4.optimize(f'{method}/{basis}', molecule=geometry.psi4_mol, return_wfn=True)
+    energy, wfn = psi4.optimize(f'{functional}/{basis}', molecule=geometry.psi4_mol, return_wfn=True)
 
     # Extract orbital energies (in Hartree)
     epsilon = wfn.epsilon_a()          # alpha orbital energies

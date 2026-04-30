@@ -7,7 +7,11 @@ from .xtb.wrapper import GFN2xTB
 from rdkit import Chem
 from rdkit.Chem import AllChem, rdmolops
 
+
+
 # Note: psi4 uses Ångström units by default for geometry input
+
+
 
 class Geometry():
     def __init__(self, smiles: str, charge: int = 0, mult: int = 1) -> None:
@@ -58,8 +62,10 @@ class Geometry():
                     assert e == self.symbols[i-2], f"Element symbol in XYZ file ({e}) does not match the current molecule ({self.symbols[i-2]})."
                     coords.append([float(x), float(y), float(z)])
             self.coords : np.ndarray = np.array(coords)
+        
         elif isinstance(source, np.ndarray):
             self.coords : np.ndarray = source
+        
         elif source is None and self.rdmolH is not None:
             self.coords : np.ndarray = self.rdmolH.GetConformer().GetPositions()
 
@@ -86,7 +92,7 @@ class Geometry():
 
 
     def optimize(self, 
-                 method: str = 'b3lyp', 
+                 functional: str = 'b3lyp', 
                  basis: str = '6-31G*', 
                  memory: str = '4 GB', 
                  num_threads: int = 4) -> None:
@@ -97,7 +103,7 @@ class Geometry():
         psi4.set_memory(memory)
         psi4.set_num_threads(num_threads)
         psi4.set_options({'basis': basis, 'scf_type': 'df', 'geom_maxiter': 300, 'd_convergence': 1e-8})
-        psi4.optimize(f'{method}/{basis}', molecule=self.psi4_mol)
+        psi4.optimize(f'{functional}/{basis}', molecule=self.psi4_mol)
         
         # self.psi4_mol is updated in-place by psi4.optimize, so we can directly access the new geometry
         # update xyz_block and mol_str with the optimized geometry
@@ -119,7 +125,7 @@ class Geometry():
 
 
     def single_point_energy(self, 
-                            method: str = "wb97x-d", 
+                            functional: str = "wb97x-d", 
                             basis: str  = "6-311+G(2d,2p)", 
                             memory: str = "4 GB", 
                             num_threads: int = 4) -> float:
@@ -133,7 +139,7 @@ class Geometry():
         psi4.set_memory(memory)
         psi4.set_num_threads(num_threads)
         psi4.set_options({"basis": basis})
-        E_sp, _ = psi4.energy(f"{method}/{basis}", molecule=self.psi4_mol, return_wfn=True)
+        E_sp, _ = psi4.energy(f"{functional}/{basis}", molecule=self.psi4_mol, return_wfn=True)
         
         return E_sp
     

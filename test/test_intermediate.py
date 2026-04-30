@@ -1,4 +1,4 @@
-from covalent.intermediate import Intermediate
+from covalent import Intermediate
 
 test_cases = [
     ("acrylamide",        "C=CC(=O)N",              "SC"),
