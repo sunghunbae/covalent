@@ -1,73 +1,101 @@
+"""  
+Proton affinity of the α-carbon also correlates because both reflect
+the intrinsic electrophilicity / LUMO character
+    
+https://www.ks.uiuc.edu/Training/SumSchool/materials/sources/tutorials/05-qm-tutorial/part2.html
+
+The proton affinity for the reaction is defined as the negative of the reaction enthalpy at 298.15K, 
+and hence (T: temperature, R: ideal gas constant)
+
+    P(A) = -ΔH = -ΔE + RT
+    
+The energy of a nonlinear polyatomic molecule can be approximated as
+    
+    E(T) = E_rot(T) + E_trans(T) + ZPE + E'_vib(T) + E_ele
+
+Here ZPE stands for the zero point energy of the normal modes. From statistical mechanics we know 
+that the contributions E_rot and E_trans both equal 3/2 RT. Furthermore, E'_vib can usually be 
+neglected compared to the zero point energy ZPE. 
+
+To determine the proton affinity one has to calculate the energy change in going 
+from the reactant A- and H+ to the product AH. The rotational energy contribution remains 
+constant (since the proton does not posses rotational kinetic energy) and the translational 
+energy of the proton contributes -3/2 RT. 
+
+    For A-, E(T) = 3/2 RT + 3/2 RT + ZPE + 0 + E_ele
+    For H+, E(T) = 0      + 3/2 RT + ZPE + 0 + E_ele
+    
+Hence, neglecting the contribution due to the vibrations as argued above, 
+one obtains the following expression for the proton affinity
+
+    P(A) = -ΔE + RT = -ΔE_ele -ΔZPE + 3/2RT + RT = -ΔE_ele -ΔZPE + 5/2RT
+
+To determine the proton affinity one therefore has to calculate two contributions: 
+the change in electronic energy given by (note that the contribution of the proton is zero)
+and the difference in zero point energies.
+
+In order to calculate the energies of AH and A- you have to first optimize both systems. 
+The ZPE can then be obtained by calculating the normal modes of the system via determination 
+of the Hessian matrix.
+"""
 
 import psi4
 
+from .geometry import Geometry
+from .intermediate import Intermediate
 
 
-def compute_proton_affinity(
-        neutral_xyz:    str,
-        protonated_xyz: Optional[str] = None,
-        desc: Optional[ReactivityDescriptors] = None,
-        name: str = "warhead"
-) -> ReactivityDescriptors:
-    """
-    Calculate the proton affinity (PA) of the β-carbon.
+class ProtonAffinity:
+    G_sol_proton = -262.4 # (kcal/mol)
+    def __init__(self, 
+                 geometry: Geometry,
+                 functional: str = 'wb97x-d',
+                 basis: str = '6-113+G(2d,2p)',
+                 scale_factor: float = 1.0,
+                 memory: str = '4 GB',
+                 num_threads: int = 4,
+                ):
+        self.geometry = geometry
+        self.functional = functional
+        self.basis = basis
+        self.scale_factor = scale_factor
+        self.memory = memory
+        self.num_threads = num_threads
+        self.PA = None
+        
+        i = Intermediate(geometry.smiles, thiolate_smiles='SC', verbose=True)
+        
+        carbanion = Geometry(i.carbanion_smiles, -1, 1)
+        carbanion.pre_optimize()
+        carbanion.optimize()
+        # carbanion.optimize(functional='wb97x-d', basis='6-311+G(2d,2p)')
 
-    PA = G(protonated) - G(neutral) - G(H+)
+        self.systems = {
+            # product
+            'HA': {
+                'geometry': self.geometry,
+                'E': None,
+                'G': None,
+            },
+            # carbanion intermediate
+            'A-': {
+                'geometry': carbanion,
+                'E': None,
+                'G': None,
+            }
+        }
 
-    NOTE: The protonated species represents H+ addition to the β-carbon,
-    converting it from sp2 (alkene) to sp3, which mimics the reverse of
-    deprotonation.  A more negative PA ↔ higher β-carbon basicity ↔
-    greater susceptibility to nucleophilic addition (Michael acceptor).
 
-    Parameters
-    ----------
-    neutral_xyz : str
-        XYZ of the neutral molecule (can be pre-optimised coords).
-    protonated_xyz : str, optional
-        Initial XYZ for the β-carbon protonated form (charge=+1 for
-        overall neutral → +1; for anion → neutral).
-        Convention here: neutral warhead → add H+ → cation (+1).
-    desc : ReactivityDescriptors, optional
-        Existing descriptor object to update (avoids re-optimising neutral).
-    """
-    if desc is None:
-        desc = ReactivityDescriptors(name=name)
+    def run(self) -> float:
+        for state, datadict in self.systems:
+            datadict['G'] = datadict['geometry'].gibbs_free_energy(
+                functional=self.functional, 
+                basis=self.basis,
+                scale_factor=self.scale_factor,
+                memory=self.memory, 
+                num_threads=self.num_threads)
 
-    print(f"\n{'─'*60}")
-    print(f"  Proton Affinity: {name}")
-    print(f"{'─'*60}")
-
-    # ── Neutral (reuse if already computed) ──────────────────────────────
-    if desc.G_neutral is None:
-        print("  [1/2] Optimising neutral molecule …")
-        mol_neutral = make_psi4_mol(neutral_xyz, charge=0, multiplicity=1)
-        G_neut = Gibbs_free_energy(mol_neutral, 
-                                    scale_factor=0.970, 
-                                    functional=OPT_METHOD, 
-                                    basis=OPT_BASIS, 
-                                    temperature=TEMPERATURE)
-        desc.G_neutral = G_neut
-    else:
-        print("  [1/2] Re-using previously computed G(neutral) …")
-        G_neut = desc.G_neutral
-
-    # ── Protonated species ────────────────────────────────────────────────
-    print("  [2/2] Optimising protonated species (charge=+1) …")
-    start_xyz = protonated_xyz if protonated_xyz else neutral_xyz
-    mol_prot = make_psi4_mol(start_xyz, charge=+1, multiplicity=1)
-    G_prot = Gibbs_free_energy(mol_prot, 
-                                scale_factor=0.970, 
-                                functional=OPT_METHOD, 
-                                basis=OPT_BASIS, 
-                                temperature=TEMPERATURE)
-    desc.G_protonated = G_prot
-
-    # PA (proton affinity)
-    # Standard definition: PA = –ΔH_deprotonation ≈ –ΔG at β-carbon site
-    # Here computed as: ΔG_protonation = G(MH+) – G(M) – G(H+)
-    # A more negative value → stronger base / better Michael acceptor
-    PA = (G_prot - G_neut) * HARTREE_TO_KCAL - G_PROTON_KCAL
-    desc.proton_affinity_kcal = PA
-    print(f"  Proton Affinity (β-carbon) = {PA:.2f} kcal/mol")
-
-    return desc
+        self.PA = psi4.constants.hartree2kcalmol * (self.systems['HA']['G'] - self.systems['A-']['G'])
+        self.PA = self.PA - ProtonAffinity.G_sol_proton
+        
+        return self.PA

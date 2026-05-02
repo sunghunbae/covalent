@@ -2,15 +2,14 @@ import numpy as np
 import psi4
 
 from psi4.driver.qcdb import vib as qcdb_vib
+
 from .xtb.wrapper import GFN2xTB
 
 from rdkit import Chem
-from rdkit.Chem import AllChem, rdmolops
-
+from rdkit.Chem import AllChem
 
 
 # Note: psi4 uses Ångström units by default for geometry input
-
 
 
 class Geometry():
@@ -102,12 +101,20 @@ class Geometry():
         """
         psi4.set_memory(memory)
         psi4.set_num_threads(num_threads)
-        psi4.set_options({'basis': basis, 'scf_type': 'df', 'geom_maxiter': 300, 'd_convergence': 1e-8})
-        psi4.optimize(f'{functional}/{basis}', molecule=self.psi4_mol)
+        psi4.set_options({
+            'basis': basis, 
+            'scf_type': 'df', 
+            'geom_maxiter': 300, 
+            'd_convergence': 1e-8,
+            })
+        
+        theory_level = f'{functional}/{basis}' 
+        psi4.optimize(theory_level, molecule=self.psi4_mol)
         
         # self.psi4_mol is updated in-place by psi4.optimize, so we can directly access the new geometry
         # update xyz_block and mol_str with the optimized geometry
         coords = self.psi4_mol.geometry().to_array() * psi4.constants.bohr2angstroms  
+        
         # Convert from Bohr to Angstroms
         self.update_coords(coords)
 
@@ -131,6 +138,14 @@ class Geometry():
                             num_threads: int = 4) -> float:
         """
         Compute a single-point energy at a previously optimised geometry.
+        functional : str, optional
+            The functional to use for the calculation. Default is 'wb97x-d' 
+            Other choice is 'b3lyp-d3bj2b'.
+        basis : str, optional
+            The basis set to use for the calculation. Default is 6-311+G(2d,2p). 
+            Other choices are '6-31+G(d)' or 'cc-pVDZ'.
+            Diffuse functions ('+') are recommended for anions to get more accurate thermochemistry.
+        
 
         Returns
         -------
@@ -139,33 +154,34 @@ class Geometry():
         psi4.set_memory(memory)
         psi4.set_num_threads(num_threads)
         psi4.set_options({"basis": basis})
-        E_sp, _ = psi4.energy(f"{functional}/{basis}", molecule=self.psi4_mol, return_wfn=True)
+
+        theory_level = f"{functional}/{basis}"
+        E_sp, wfn = psi4.energy(theory_level, molecule=self.psi4_mol, return_wfn=True)
         
         return E_sp
     
 
     def gibbs_free_energy(self,
-                          scale_factor: float,
-                          functional: str = 'b3lyp',
-                          basis: str = '6-31+G(d)',
-                          dispersion: str = 'd3bj',
+                          functional: str = 'wb97x-d',
+                          basis: str = '6-311+G(2d,2p)',
+                          scale_factor: float = 1.0,
                           temperature: float = 298.15,
-                          pressure: float = 101325.0) -> float:
+                          pressure: float = 101325.0,
+                          memory: str = '4 GB',
+                          num_threads: int = 4) -> float:
         """
         Perform a frequency calculation, scale the frequencies by a given factor, and compute thermochemical properties.
         Parameters
         ----------
-        mol : psi4.core.Molecule
-            The molecule for which to calculate frequencies.
+        functional : str, optional
+            The functional to use for the calculation. Default is 'wb97x-d' 
+            Other choice is 'b3lyp-d3bj2b'.
+        basis : str, optional
+            The basis set to use for the calculation. Default is 6-311+G(2d,2p). 
+            Other choices are '6-31+G(d)' or 'cc-pVDZ'.
+            Diffuse functions ('+') are recommended for anions to get more accurate thermochemistry.
         scale_factor : float
             The factor by which to scale the frequencies.
-        functional : str, optional
-            The functional to use for the calculation. Default is 'b3lyp' (or 'scf').
-        basis : str, optional
-            The basis set to use for the calculation. Default is '6-31+G(d)' or 'cc-pVDZ'.
-            Diffuse functions (e.g. 6-31+G(d)) are recommended for anions to get more accurate thermochemistry.
-        dispersion : str, optional
-            The dispersion correction to use (e.g. 'd3bj' for Grimme D3 with Becke-Johnson damping). Default is 'd3bj'.
         temperature : float, optional
             The temperature at which to compute thermochemical properties. Default is 298.15 K.
         pressure : float, optional
@@ -173,61 +189,56 @@ class Geometry():
         Returns
         -------
         float
-            The corrected Gibbs free energy.
+            The corrected Gibbs free energy in hartree.
         """
-
+        psi4.set_memory(memory)
+        psi4.set_num_threads(num_threads)
         psi4.set_options({
             "basis": basis,
-            "dft_dispersion_parameters": [dispersion],   # activates D3(BJ)
             "geom_maxiter": 200,
             "g_convergence": "gau_tight",
+            "dft_spherical": True # standard for modern basis sets
         })
+        # note: 'dft_dispersion_parameters' is delicate.
+        # for standard D3BJ, it's safer to append it to the functinoal string. 
+        # "dft_dispersion_parameters": [dispersion],   # activates D3(BJ)
+
+        theory_level = f"{functional}/{basis}"
 
         # 0. Optimise
-        E_opt, wfn = psi4.optimize(f"{functional}/{basis}", molecule=self.psi4_mol, return_wfn=True)
+        E_opt, wfn = psi4.optimize(theory_level, molecule=self.psi4_mol, return_wfn=True)
 
         # 1. Run the frequency calculation
-        E_freq, wfn_freq = psi4.frequency(
-            f'{functional}/{basis}',
-            molecule=self.psi4_mol, 
-            return_wfn=True)
+        E_freq, wfn_freq = psi4.frequency(theory_level, molecule=self.psi4_mol, return_wfn=True)
 
         # Step 2: Scale the Hessian by SCALE_FACTOR^2
-        H_orig    = np.array(wfn_freq.hessian())          # (3N, 3N) non-mass-weighted, Eh/a0^2
+        H_orig    = np.array(wfn_freq.hessian()) # (3N, 3N) non-mass-weighted, Eh/a0^2
         H_scaled  = H_orig * (scale_factor ** 2)
 
         # Step 3: Re-run harmonic_analysis with the scaled Hessian
         #         This keeps ALL vibinfo fields (omega, ZPE, force constants) consistent
         mol_psi  = wfn_freq.molecule()
-        geom     = np.array(mol_psi.geometry())
-        mass     = np.array([mol_psi.mass(i) for i in range(mol_psi.natom())])  # in u
-        basisset = wfn_freq.basisset()
-        irrep_labels = wfn_freq.molecule().irrep_labels()
-
         scaled_vibinfo, _ = qcdb_vib.harmonic_analysis(
             hess         = H_scaled,
-            geom         = geom,
-            mass         = mass,
-            basisset     = basisset,
-            irrep_labels = irrep_labels,
+            geom         = np.array(mol_psi.geometry()),
+            mass         = np.array([mol_psi.mass(i) for i in range(mol_psi.natom())]),
+            basisset     = wfn_freq.basisset(),
+            irrep_labels = wfn_freq.molecule().irrep_labels(),
         )
 
-        # Step 4: Extract molecular properties for thermo()
-        molecular_mass = sum(mol_psi.mass(i) for i in range(mol_psi.natom()))
-        multiplicity   = mol_psi.multiplicity()
-        sigma          = mol_psi.rotational_symmetry_number()
-        rot_const       = np.asarray(mol_psi.rotational_constants())
-
+        # Thermochemistry
+        # CRITICAL: Psi4 qcdb.vib.thermo expects Pressure in Pascals, 
+        # but check if your version of Psi4 prefers atmosphere (101325.0 is correct for Pa).
         # Step 5: Call thermo() with the fully consistent scaled vibinfo
         thermo, thermo_text = qcdb_vib.thermo(
             vibinfo        = scaled_vibinfo,
             T              = temperature,
             P              = pressure,
-            multiplicity   = multiplicity,
-            molecular_mass = molecular_mass,
+            multiplicity   = mol_psi.multiplicity(),
+            molecular_mass = sum(mol_psi.mass(i) for i in range(mol_psi.natom())),
             E0             = E_freq,
-            sigma          = sigma,
-            rot_const      = rot_const,
+            sigma          = mol_psi.rotational_symmetry_number(),
+            rot_const      = np.asarray(mol_psi.rotational_constants()),
         )
 
         # thermo.keys() = ['E0', 'B', 'sigma', 'T', 'P',
@@ -240,15 +251,15 @@ class Geometry():
         #   'ZPE_vib',  'ZPE_elec', 'ZPE_trans', 'ZPE_rot', 'ZPE_corr', 'ZPE_tot'])
 
         # Step 6: Extract results
-        ZPE    = thermo["ZPE_vib"].data
-        H_corr = thermo["H_corr"].data
-        G_corr = thermo["G_corr"].data
+        # ZPE    = thermo["ZPE_vib"].data
+        # H_corr = thermo["H_corr"].data
+        # G_corr = thermo["G_corr"].data
 
-        E_zpe   = E_freq + ZPE
-        H_total = E_freq + H_corr
-        G_total = E_freq + G_corr
-        TS      = H_total - G_total
-        S       = (TS / temperature) * 627.509474 # hartree/K to kcal/mol/K
+        # E_zpe   = E_freq + ZPE
+        # H_total = E_freq + H_corr
+        # G_total = E_freq + G_corr
+        # TS      = H_total - G_total
+        # S       = (TS / temperature) * 627.509474 # hartree/K to kcal/mol/K
         # print(thermo_text)
         # print(f"E_elec      = {E_freq:.6f}  Hartree")
         # print(f"E_zpe       = {E_zpe:.6f}  Hartree")
@@ -256,4 +267,4 @@ class Geometry():
         # print(f"G({temperature} K) = {G_total:.6f}  Hartree")
         # print(f"TS          = {TS * 627.509:.4f}  kcal/mol")
 
-        return G_total
+        return thermo["G_tot"].data

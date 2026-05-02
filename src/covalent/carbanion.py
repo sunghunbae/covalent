@@ -2,29 +2,21 @@
 Calculates quantum chemical descriptors correlated with Michael addition
 reaction energy barriers for cysteine-targeting electrophilic warheads:
 
-  1. Carbanion Formation Free Energy (ΔG_carbanion)   — anion at alpha carbon
-  2. Carbanion Formation Single-Point Energy (ΔE_SP)  — fast screening proxy
-  3. Proton Affinity (PA)                             — alpha-carbon basicity
-
-Theory:
-  - Michael addition of Cys-SH (Cys-S-) to an a,b-unsaturated warhead proceeds 
+- Michael addition of Cys-SH (Cys-S-) to an α,β-unsaturated warhead proceeds 
     via nucleophilic attack at the b-carbon (conjugate addition).
-  - The a-carbanion intermediate energy correlates with the TS barrier
+
+- The α-carbanion intermediate energy correlates with the TS barrier
     (Hammond postulate / BEP relationship).
-  - Proton affinity of the a-carbon also correlates because both reflect
-    the intrinsic electrophilicity / LUMO character at that site.
 
-Reference workflow per warhead molecule (neutral form):
-  neutral  →  geometry optimization  →  E(neutral),  G(neutral)
-  anion    →  geometry optimization  →  E(anion),    G(anion)
-  proton   →  geometry optimization  →  E(protonated), G(protonated)
+    Michael acceptor  +  MeS-  -> Carbanion intermediate (anion at α-carbon)
 
-  ΔG_carbanion  = G(anion)      - G(neutral)          [+ ZPE / thermal]
-  ΔE_SP         = E_SP(anion)   - E_SP(neutral)        [single-point, faster]
-  PA            = G(protonated) - G(neutral) - G(H+)   [proton affinity]
+    Carbanion Formation Free Energy (ΔG) 
+    = ΔG(Carbanion) - ΔG(Michael_acceptor) - ΔG(MeS-)
 
-  G(H+) at 298 K = -6.28 kcal/mol  (translational only, Sackur-Tetrode)
-=============================================================================
+    Faster Screening Proxy
+
+    Carbanion Single-Point Energy (ΔE)
+    = ΔE(Carbanion) - ΔE(Michael_acceptor) - ΔE(MeS-)
 """
 
 import psi4
