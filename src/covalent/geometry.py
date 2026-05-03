@@ -92,7 +92,9 @@ class Geometry():
 
     def optimize(self, 
                  functional: str = 'b3lyp', 
-                 basis: str = '6-31G*', 
+                 basis: str = '6-31G*',
+                 solvent: str = 'water',
+                 solvation_model: str = 'pcm',
                  memory: str = '4 GB', 
                  num_threads: int = 4) -> None:
         """
@@ -101,13 +103,26 @@ class Geometry():
         """
         psi4.set_memory(memory)
         psi4.set_num_threads(num_threads)
-        psi4.set_options({
-            'basis': basis, 
-            'scf_type': 'df', 
-            'geom_maxiter': 300, 
-            'd_convergence': 1e-8,
-            })
-        
+        if solvent:
+            psi4.set_options({
+                "basis": basis,
+                "scf_type": "df",
+                'geom_maxiter': 300, 
+                'd_convergence': 1e-8,
+                "ddx": True,
+                "ddx_model": solvation_model,
+                "ddx_solvent": solvent,
+                "ddx_radii_set": "uff",
+                })
+        else:
+            psi4.set_options({
+                'basis': basis, 
+                'scf_type': 'df', 
+                'geom_maxiter': 300, 
+                'd_convergence': 1e-8,
+                })
+        # DF (Density Fitting): Approximates 4-center integrals using 3-center integrals, drastically speeding up calculations, especially for large systems.
+
         theory_level = f'{functional}/{basis}' 
         psi4.optimize(theory_level, molecule=self.psi4_mol)
         
@@ -133,7 +148,9 @@ class Geometry():
 
     def single_point_energy(self, 
                             functional: str = "wb97x-d", 
-                            basis: str  = "6-311+G(2d,2p)", 
+                            basis: str  = "6-311+G(2d,2p)",
+                            solvent: str = 'water',
+                            solvation_model: str = 'pcm',
                             memory: str = "4 GB", 
                             num_threads: int = 4) -> float:
         """
@@ -153,7 +170,17 @@ class Geometry():
         """
         psi4.set_memory(memory)
         psi4.set_num_threads(num_threads)
-        psi4.set_options({"basis": basis})
+        if solvent:
+            psi4.set_options({
+                "basis": basis,
+                "scf_type": "pk",
+                "ddx": True,
+                "ddx_model": solvation_model, # PCM(default), COSMO, LPB
+                "ddx_solvent": solvent,
+                "ddx_radii_set": "uff",
+                })
+        else:
+            psi4.set_options({"basis": basis})
 
         theory_level = f"{functional}/{basis}"
         E_sp, wfn = psi4.energy(theory_level, molecule=self.psi4_mol, return_wfn=True)

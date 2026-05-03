@@ -17,3 +17,4 @@ covalent = { path = ".", editable = true }
 python = "==3.12"
 psi4 = ">=1.10,<2"
 rdkit = ">=2026.3.1,<2027"
+pyddx = ">=0.7.0,<0.8"
