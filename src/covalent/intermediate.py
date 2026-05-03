@@ -60,7 +60,11 @@ class Intermediate:
         self.alpha_idx : int | None = alpha_idx
         self.beta_idx : int | None = beta_idx
         self.verbose : bool = verbose
-        self.carbanion_smiles : str
+
+        self.carbanion_rdmol : Chem.Mol | None = None
+        self.carbanion_smiles : str = ""
+        self.product_rdmol : Chem.Mol | None = None
+        self.product_smiles : str = ""
         self.ewg_type: str = "user_defined"
         self.carbanion_charge: int | None = None
         self.sites : list[tuple[int, int, str]] = []
@@ -145,7 +149,7 @@ class Intermediate:
         self.mol = Chem.MolFromSmiles(self.michael_acceptor_smiles)
         if self.mol is None:
             raise ValueError(f"Could not parse SMILES: {self.michael_acceptor_smiles}")
-        self.mol = Chem.RWMol(Chem.AddHs(self.mol))   # explicit H needed for carbanion geometry
+        self.mol = Chem.RWMol(Chem.AddHs(self.mol)) # explicit H needed for carbanion geometry
         
         # ── Step 2: Detect Michael acceptor site(s) ───────────────────────────────
         self.ewg_type = "user_defined"
@@ -198,7 +202,7 @@ class Intermediate:
             raise ValueError(f"Invalid thiolate SMILES: {self.thiolate_smiles}")
         thiol_mol = Chem.AddHs(thiol_mol)
         
-        # Find the sulfur atom (attachment point) in thiolate fragment
+        # 4d. Find the sulfur atom (attachment point) in thiolate fragment
         s_atom_idx_in_thiol = None
         for atom in thiol_mol.GetAtoms():
             if atom.GetAtomicNum() == 16:   # sulfur
@@ -207,32 +211,14 @@ class Intermediate:
         if s_atom_idx_in_thiol is None:
             raise ValueError(f"No sulfur atom found in thiolate: {self.thiolate_smiles}")
         
-        # Combine the two molecules
+        # 4f. Combine the two molecules
         combined = Chem.RWMol(Chem.CombineMols(edit_mol, thiol_mol))
         
-        # Index of S in the combined molecule
+        # 4g. Bond β-carbon to sulfur
         s_idx_combined = edit_mol.GetNumAtoms() + s_atom_idx_in_thiol
-        
-        # Bond β-carbon to sulfur
         combined.AddBond(self.beta_idx, s_idx_combined, Chem.BondType.SINGLE)
         
-        # Remove one H from β-carbon (it now has an extra substituent)
-        beta_atom = combined.GetAtomWithIdx(self.beta_idx)
-        # Find and remove one explicit H bonded to beta carbon
-        h_to_remove = None
-        for neighbor in beta_atom.GetNeighbors():
-            if neighbor.GetAtomicNum() == 1:  # hydrogen
-                h_to_remove = neighbor.GetIdx()
-                break
-        if h_to_remove is not None:
-            combined.RemoveAtom(h_to_remove)
-        
-        # Remove one H from sulfur (it was -SH, now -S-)
-        # Re-fetch s_idx after possible atom removal
-        # Recalculate s_idx if h_to_remove was before it in index
-        if h_to_remove is not None and h_to_remove < s_idx_combined:
-            s_idx_combined -= 1
-        
+        # ── Step 5: Remove one H from sulfur (it was SH, now S-) ──────────────────
         s_atom = combined.GetAtomWithIdx(s_idx_combined)
         sh_to_remove = None
         for neighbor in s_atom.GetNeighbors():
@@ -242,16 +228,36 @@ class Intermediate:
         if sh_to_remove is not None:
             combined.RemoveAtom(sh_to_remove)
         
-        # ── Step 5: Sanitize and generate SMILES ──────────────────────────────────
+        # ── Step 6: Sanitize and generate SMILES ──────────────────────────────────
         try:
             Chem.SanitizeMol(combined)
         except Exception as e:
             raise ValueError(f"Sanitization failed after carbanion construction: {e}")
         
+        self.carbanion_rdmol = Chem.Mol(combined)
         self.carbanion_smiles = Chem.MolToSmiles(combined)
         self.carbanion_charge = sum(atom.GetFormalCharge() for atom in combined.GetAtoms())
+        
         if self.carbanion_charge != -1:
             raise ValueError(f"Constructed carbanion has unexpected charge: {self.carbanion_charge}")
+
+        # ── Step 7: Product SMILES ────────────────────────────────────────────────────
+        alpha_atom = None
+        for atom in combined.GetAtoms():
+            if atom.GetFormalCharge() == -1:
+                alpha_atom = atom
+                break
+        
+        assert alpha_atom is not None, "cannot identify negatively charged alpha carbon"
+
+        alpha_atom.SetFormalCharge(0)
+        # Recalculate implicit valency (this "adds" the H)
+        alpha_atom.UpdatePropertyCache()
+        combined = Chem.AddHs(combined)
+        Chem.SanitizeMol(combined)
+        self.product_rdmol = combined
+        self.product_smiles = Chem.MolToSmiles(combined)
+
 
         if self.verbose:
             print(f"\n  Neutral Michael acceptor : {self.michael_acceptor_smiles}")

@@ -22,6 +22,7 @@ for name, smiles, thiol in test_cases:
         print(f"  Alpha carbon index: {warhead.alpha_idx}")
         print(f"  Beta carbon index: {warhead.beta_idx}")
         print(f"  Carbanion SMILES: {warhead.carbanion_smiles}")
+        print(f"  Product SMILES: {warhead.product_smiles}")
         print(f"  EWG type: {warhead.ewg_type}")
         print()
     except ValueError as e:
