@@ -41,6 +41,7 @@ class FukuiIndex:
 
         self.add_system(delta=-1), # one less electrons, positive
         self.add_system(delta=+1), # one more electrons, negative
+        self.run()
 
 
 

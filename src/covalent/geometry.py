@@ -7,6 +7,7 @@ from .xtb.wrapper import GFN2xTB
 
 from rdkit import Chem
 from rdkit.Chem import AllChem
+from rdkit.Geometry import Point3D
 
 
 # Note: psi4 uses Ångström units by default for geometry input
@@ -68,6 +69,11 @@ class Geometry():
         elif source is None and self.rdmolH is not None:
             self.coords : np.ndarray = self.rdmolH.GetConformer().GetPositions()
 
+        for i, (e, (x, y, z)) in enumerate(zip(self.symbols, self.coords)):
+            atom = self.rdmolH.GetAtomWithIdx(i)
+            assert e == atom.GetSymbol()
+            self.rdmolH.GetConformer().SetAtomPosition(atom.GetIdx(), Point3D(x, y, z))
+        
         lines = [f"{e:5}  {x:23.14f}  {y:23.14f}  {z:23.14f}" for e, (x, y, z) in zip(self.symbols, self.coords)]
         self.xyz_block : str = "\n".join(lines)
         # Atomic coordinates in XYZ format (element  x  y  z, one atom per line) (Angstroms).
@@ -79,7 +85,7 @@ class Geometry():
         self.psi4_mol : psi4.core.Molecule = psi4.geometry(self.mol_str)
 
 
-    def pre_optimize(self) -> None:
+    def xtb_optimize(self) -> None:
         """
         Pre-optimization with xtb (GFN2-xTB) to get a reasonable starting geometry for Psi4 DFT optimization.
         This can help avoid convergence issues in the subsequent DFT optimization step.
@@ -91,9 +97,9 @@ class Geometry():
 
 
     def optimize(self, 
-                 functional: str = 'b3lyp', 
-                 basis: str = '6-31G*',
-                 solvent: str = 'water',
+                 functional: str = 'wb97x-d', 
+                 basis: str = '6-311+G(d,p)',
+                 solvent: str | None = None,
                  solvation_model: str = 'pcm',
                  memory: str = '4 GB', 
                  num_threads: int = 4) -> None:
@@ -106,9 +112,7 @@ class Geometry():
         if solvent:
             psi4.set_options({
                 "basis": basis,
-                "scf_type": "df",
-                'geom_maxiter': 300, 
-                'd_convergence': 1e-8,
+                "geom_maxiter": 200,
                 "ddx": True,
                 "ddx_model": solvation_model,
                 "ddx_solvent": solvent,
@@ -116,10 +120,8 @@ class Geometry():
                 })
         else:
             psi4.set_options({
-                'basis': basis, 
-                'scf_type': 'df', 
-                'geom_maxiter': 300, 
-                'd_convergence': 1e-8,
+                'basis': basis,
+                "geom_maxiter": 200,
                 })
         # DF (Density Fitting): Approximates 4-center integrals using 3-center integrals, drastically speeding up calculations, especially for large systems.
 
@@ -148,8 +150,8 @@ class Geometry():
 
     def single_point_energy(self, 
                             functional: str = "wb97x-d", 
-                            basis: str  = "6-311+G(2d,2p)",
-                            solvent: str = 'water',
+                            basis: str  = "6-311+G(d,p)",
+                            solvent: str | None = None,
                             solvation_model: str = 'pcm',
                             memory: str = "4 GB", 
                             num_threads: int = 4) -> float:
@@ -174,13 +176,17 @@ class Geometry():
             psi4.set_options({
                 "basis": basis,
                 "scf_type": "pk",
+                "geom_maxiter": 200,
                 "ddx": True,
                 "ddx_model": solvation_model, # PCM(default), COSMO, LPB
                 "ddx_solvent": solvent,
                 "ddx_radii_set": "uff",
                 })
         else:
-            psi4.set_options({"basis": basis})
+            psi4.set_options({
+                "basis": basis,
+                "geom_maxiter": 200,
+                })
 
         theory_level = f"{functional}/{basis}"
         E_sp, wfn = psi4.energy(theory_level, molecule=self.psi4_mol, return_wfn=True)
@@ -190,7 +196,7 @@ class Geometry():
 
     def gibbs_free_energy(self,
                           functional: str = 'wb97x-d',
-                          basis: str = '6-311+G(2d,2p)',
+                          basis: str = '6-311+G(d,p)',
                           scale_factor: float = 1.0,
                           temperature: float = 298.15,
                           pressure: float = 101325.0,
@@ -223,8 +229,6 @@ class Geometry():
         psi4.set_options({
             "basis": basis,
             "geom_maxiter": 200,
-            "g_convergence": "gau_tight",
-            "dft_spherical": True # standard for modern basis sets
         })
         # note: 'dft_dispersion_parameters' is delicate.
         # for standard D3BJ, it's safer to append it to the functinoal string. 

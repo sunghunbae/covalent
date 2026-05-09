@@ -1,7 +1,7 @@
 from rdkit import Chem
 
 
-class Intermediate:
+class Reaction:
     """
     Given a Michael acceptor SMILES, constructs the corresponding α-carbanion intermediate SMILES
     formed after thiolate attack. 
@@ -27,6 +27,7 @@ class Intermediate:
     # Ordered from most specific to most general to avoid mis-assignment
 
     EWG_SMARTS = {
+        "vinyl_trifluoromethyl": "[C:1](=[C:2])C(F)(F)F",
         "cyanoacrylamide":  "[C:1](=[C:2])C#N",          # -C=C-CN (dual activation)
         "vinyl_sulfone":    "[C:1](=[C:2])S(=O)(=O)",     # -C=C-SO2-
         "vinyl_phosphonate":"[C:1](=[C:2])P(=O)",          # -C=C-P(O)-
@@ -39,15 +40,15 @@ class Intermediate:
     }
 
     def __init__(self, 
-                 michael_acceptor_smiles: str,
-                 thiolate_smiles: str = "SC",
+                 reactant_smiles: str,
+                 thiol_smiles: str = "SC",
                  alpha_idx: int | None = None,
                  beta_idx: int | None = None,
                  verbose: bool = False):
         """
         Args:
-            michael_acceptor_smiles : SMILES of the neutral Michael acceptor
-            thiolate_smiles         : SMILES fragment for the thiolate model
+            reactant_smiles : SMILES of the neutral Michael acceptor
+            thiol_smiles         : SMILES fragment for the thiolate model
                                         (default "SC" = methylthio; use "SCC(N)C(=O)O"
                                         for cysteine-like surrogate)
             alpha_idx               : Override auto-detected alpha carbon atom index
@@ -55,18 +56,21 @@ class Intermediate:
             verbose                 : Print detection details
         """
 
-        self.michael_acceptor_smiles : str = michael_acceptor_smiles
-        self.thiolate_smiles : str = thiolate_smiles
+        self.reactant_smiles : str = reactant_smiles
+        self.reactant_rdmolH : Chem.Mol | None = None
+        self.thiol_smiles : str = thiol_smiles
         self.alpha_idx : int | None = alpha_idx
         self.beta_idx : int | None = beta_idx
         self.verbose : bool = verbose
 
         self.carbanion_rdmol : Chem.Mol | None = None
         self.carbanion_smiles : str = ""
+        self.carbanion_charge: int | None = None
+
         self.product_rdmol : Chem.Mol | None = None
         self.product_smiles : str = ""
+        
         self.ewg_type: str = "user_defined"
-        self.carbanion_charge: int | None = None
         self.sites : list[tuple[int, int, str]] = []
 
         self.build_carbanion_smiles()
@@ -91,7 +95,7 @@ class Intermediate:
             if pattern is None:
                 continue
             
-            for match in self.mol.GetSubstructMatches(pattern):
+            for match in self.reactant_rdmolH.GetSubstructMatches(pattern):
                 # match[0] = alpha carbon (attached to EWG, mapped as :1)
                 # match[1] = beta carbon (terminal, mapped as :2)
                 alpha_idx, beta_idx = match[0], match[1]
@@ -102,7 +106,7 @@ class Intermediate:
                 seen_pairs.add(pair)
                 
                 # Verify this is truly a C=C double bond between these atoms
-                bond = self.mol.GetBondBetweenAtoms(alpha_idx, beta_idx)
+                bond = self.reactant_rdmolH.GetBondBetweenAtoms(alpha_idx, beta_idx)
                 if bond is None or bond.GetBondTypeAsDouble() < 1.9:
                     continue
                 
@@ -123,15 +127,6 @@ class Intermediate:
         5. Sets formal charge -1 on Cα
         6. Returns the carbanion SMILES and metadata
 
-        Args:
-            michael_acceptor_smiles : SMILES of the neutral Michael acceptor
-            thiolate_smiles         : SMILES fragment for the thiolate model
-                                    (default "SC" = methylthio; use "SCC(N)C(=O)O"
-                                    for cysteine-like surrogate)
-            alpha_idx               : Override auto-detected alpha carbon atom index
-            beta_idx                : Override auto-detected beta carbon atom index
-            verbose                 : Print detection details
-
         Returns:
             dict with keys:
             "carbanion_smiles"  : SMILES string of the carbanion intermediate
@@ -146,10 +141,11 @@ class Intermediate:
             ValueError: if no Michael acceptor pattern is found and no indices given
         """
         # ── Step 1: Parse input ───────────────────────────────────────────────────
-        self.mol = Chem.MolFromSmiles(self.michael_acceptor_smiles)
-        if self.mol is None:
-            raise ValueError(f"Could not parse SMILES: {self.michael_acceptor_smiles}")
-        self.mol = Chem.RWMol(Chem.AddHs(self.mol)) # explicit H needed for carbanion geometry
+        self.reactant_rdmolH = Chem.MolFromSmiles(self.reactant_smiles)
+        if self.reactant_rdmolH is None:
+            raise ValueError(f"Could not parse SMILES: {self.reactant_smiles}")
+        self.reactant_rdmolH = Chem.RWMol(Chem.AddHs(self.reactant_rdmolH)) 
+        # explicit H needed for carbanion geometry
         
         # ── Step 2: Detect Michael acceptor site(s) ───────────────────────────────
         self.ewg_type = "user_defined"
@@ -158,7 +154,7 @@ class Intermediate:
             self.find_michael_acceptor_atoms()
             if not self.sites:
                 raise ValueError(
-                    f"No Michael acceptor pattern detected in: {self.michael_acceptor_smiles}\n"
+                    f"No Michael acceptor pattern detected in: {self.reactant_smiles}\n"
                     f"Supported EWGs: {list(self.EWG_SMARTS.keys())}\n"
                     f"You can manually specify alpha_idx and beta_idx to override."
                 )
@@ -175,7 +171,7 @@ class Intermediate:
                 print(f"  Using user-specified α-C idx={self.alpha_idx}, β-C idx={self.beta_idx}")
         
         # ── Step 3: Validate the Cα=Cβ bond ──────────────────────────────────────
-        bond = self.mol.GetBondBetweenAtoms(self.alpha_idx, self.beta_idx)
+        bond = self.reactant_rdmolH.GetBondBetweenAtoms(self.alpha_idx, self.beta_idx)
         if bond is None:
             raise ValueError(f"No bond between atom {self.alpha_idx} and {self.beta_idx}")
         if bond.GetBondTypeAsDouble() < 1.9:
@@ -185,7 +181,7 @@ class Intermediate:
             )
         
         # ── Step 4: Modify molecule — build carbanion ─────────────────────────────
-        edit_mol = Chem.RWMol(self.mol)
+        edit_mol = Chem.RWMol(self.reactant_rdmolH)
         
         # 4a. Convert Cα=Cβ double bond → single bond
         edit_mol.RemoveBond(self.alpha_idx, self.beta_idx)
@@ -197,9 +193,9 @@ class Intermediate:
         
         # 4c. Attach thiolate (-SCH3) to β-carbon
         #     Parse thiolate fragment and merge into molecule
-        thiol_mol = Chem.MolFromSmiles(self.thiolate_smiles)
+        thiol_mol = Chem.MolFromSmiles(self.thiol_smiles)
         if thiol_mol is None:
-            raise ValueError(f"Invalid thiolate SMILES: {self.thiolate_smiles}")
+            raise ValueError(f"Invalid thiolate SMILES: {self.thiol_smiles}")
         thiol_mol = Chem.AddHs(thiol_mol)
         
         # 4d. Find the sulfur atom (attachment point) in thiolate fragment
@@ -209,7 +205,7 @@ class Intermediate:
                 s_atom_idx_in_thiol = atom.GetIdx()
                 break
         if s_atom_idx_in_thiol is None:
-            raise ValueError(f"No sulfur atom found in thiolate: {self.thiolate_smiles}")
+            raise ValueError(f"No sulfur atom found in thiolate: {self.thiol_smiles}")
         
         # 4f. Combine the two molecules
         combined = Chem.RWMol(Chem.CombineMols(edit_mol, thiol_mol))
@@ -258,10 +254,9 @@ class Intermediate:
         self.product_rdmol = combined
         self.product_smiles = Chem.MolToSmiles(combined)
 
-
         if self.verbose:
-            print(f"\n  Neutral Michael acceptor : {self.michael_acceptor_smiles}")
-            print(f"  Michael acceptor sites   : {len(self.sites)}")
+            print(f"\n  Neutral reactant         : {self.reactant_smiles}")
+            print(f"  Reaction sites           : {len(self.sites)}")
             print(f"  EWG type detected        : {self.ewg_type}")
             print(f"  α-carbanion intermediate : {self.carbanion_smiles}")
             print(f"  α-carbanion intermediate charge : {self.carbanion_charge}")

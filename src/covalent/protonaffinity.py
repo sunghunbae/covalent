@@ -42,7 +42,7 @@ of the Hessian matrix.
 import psi4
 
 from .geometry import Geometry
-from .intermediate import Intermediate
+from .reaction import Reaction
 
 
 class ProtonAffinity:
@@ -63,7 +63,7 @@ class ProtonAffinity:
         self.num_threads = num_threads
         self.PA = None
         
-        i = Intermediate(geometry.smiles, thiolate_smiles='SC', verbose=True)
+        i = Reaction(geometry.smiles, thiolate_smiles='SC', verbose=True)
         
         carbanion = Geometry(i.carbanion_smiles, -1, 1)
         carbanion.pre_optimize()
