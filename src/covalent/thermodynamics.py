@@ -2,15 +2,16 @@ import numpy as np
 import psi4
 
 from psi4.driver.qcdb import vib as qcdb_vib
+from .geometry import Geometry
 
-
-def Gibbs_free_energy(mol: psi4.core.Molecule,
-                    scale_factor: float,
-                    functional: str = 'scf',
-                    basis: str = 'cc-pVDZ',
-                    temperature: float = 298.15,
-                    pressure: float = 101325.0,
-                    ) -> float:
+def Gibbs_free_energy(
+        geometry: Geometry,
+        scale_factor: float = 1.0,
+        functional: str = 'scf',
+        basis: str = 'cc-pVDZ',
+        temperature: float = 298.15,
+        pressure: float = 101325.0,
+        ) -> float:
     """
     Perform a frequency calculation, scale the frequencies by a given factor, and compute thermochemical properties.
     Parameters
@@ -32,9 +33,10 @@ def Gibbs_free_energy(mol: psi4.core.Molecule,
     float
         The corrected Gibbs free energy.
     """
-
+    mol = geometry.psi4_mol
+    
     psi4.set_options({'basis': basis})
-
+    
     # 1. Run the frequency calculation
     E_freq, wfn_freq = psi4.frequency(
         f'{functional}/{basis}',

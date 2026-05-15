@@ -1,5 +1,4 @@
-from covalent import Geometry, electrophilicity_index
-
+from covalent import Geometry, omega
 
 smiles = "C=CC(=O)N"  # N-methyl acrylamide
 geometry = Geometry(smiles)
@@ -10,7 +9,7 @@ geometry.optimize()
 print("\nOptimized geometry:")
 print(geometry.mol_str)
 
-gei_results = electrophilicity_index(geometry)
+results = omega(geometry)
 print("Global electrophilicity index:")
-for key, value in gei_results.items():
+for key, value in results.items():
     print(f"  {key}: {value}")

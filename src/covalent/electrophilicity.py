@@ -1,11 +1,12 @@
 import psi4
-from covalent import Geometry
+
+from .geometry import Geometry
 
 
-def electrophilicity_index(geometry: Geometry, 
-                           functional: str = 'b3lyp', 
-                           basis: str = '6-31G*', 
-                           solvent: str = None):
+def omega(geometry: Geometry, 
+          functional: str = 'b3lyp', 
+          basis: str = '6-31G*', 
+          solvent: str = None):
     """
     Compute Global Electrophilicity Index following BI 2019/2020 protocol.
     
