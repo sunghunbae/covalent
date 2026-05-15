@@ -3,6 +3,7 @@ from rdkit import Chem
 from rdkit.Chem import rdmolops, AllChem
 from covalent.xtb.wrapper import GFN2xTB
 from itertools import combinations
+
 import numpy as np
 
 
@@ -50,10 +51,10 @@ def prune(mol: Chem.Mol,
     # bonds to watch WBO changes, e.g. bonds in the reaction center
     wbo_watch = [(i,j) for i,j in list(combinations(center, 2)) if mol.GetBondBetweenAtoms(i,j) is not None]
 
-    # electronegative atoms are less likely to be truncated
+    # electronegative atoms are less likely to be pruned
     # electronegative: list[int] = [7, 8, 9, 17, 35]
 
-    # bonds with bond order less than this threshold are more likely to be truncated
+    # bonds with bond order less than this threshold are more likely to be pruned
     # bond_order_threshold: float = 1.75
 
     d_vs_ij = []
@@ -78,7 +79,7 @@ def prune(mol: Chem.Mol,
             print(f"parent WBO={parent.wbo[ij]}")
     
     bonds_to_break = []
-    truncated = []
+    pruned = []
     for d, (i,j) in sorted(d_vs_ij, reverse=True):
         bond = mol.GetBondBetweenAtoms(i,j)
         n1 = mol.GetAtomWithIdx(i).GetAtomicNum()
@@ -86,7 +87,6 @@ def prune(mol: Chem.Mol,
         bond_order = (bond.GetBondTypeAsDouble() < bond_order_threshold)
         bond_pauling = not((n1 in electronegative_atoms) or (n2 in electronegative_atoms))
         
-        # print(f"d={d} {n1} {n2} bond_order={bond.GetBondTypeAsDouble()} pauling={bond_pauling}")
         if verbose:
             print(f"d={d} {n1} {n2} bond_order={bond.GetBondTypeAsDouble()} pauling={bond_pauling}")
 
@@ -124,22 +124,8 @@ def prune(mol: Chem.Mol,
                     print(f"WBO frag_jk={frag_jk} WBO={parent.wbo[jk]} -> {child.wbo[frag_jk]} diff={wbo_diff_} {'PASS' if wbo_diff_ <= max_wbo_diff else 'FAIL'}")
 
             if all(wbo_diff):
-                truncated.append((frag_na, 
+                pruned.append((frag_na, 
                                   fragment_mol, 
                                   matched_frag_idx(rdmolH, center, fragment_mol)))
 
-    return truncated
-
-
-if __name__ == '__main__':
-    mol = Chem.MolFromSmiles("FC1=C(Cl)C=C(NC2=NC=NC3=C2C=C(NC(/C=C/CN(C)C)=O)C(O[C@@H]4COCC4)=C3)C=C1")
-    
-    pattern = Chem.MolFromSmarts("C=CC")
-    center = mol.GetSubstructMatch(pattern)
-
-    parent_na = mol.GetNumAtoms(onlyExplicit=False)
-    print(parent_na, Chem.MolToSmiles(Chem.RemoveHs(mol)), center)
-
-    frag = prune(mol, center=center, cap_dummy_atom=6, verbose=True)
-    na, frag_mol, frag_center = sorted(frag, key=lambda x: x[0])[0] # smallest fragment
-    print(na, Chem.MolToSmiles(Chem.RemoveHs(frag_mol)), frag_center)
+    return pruned

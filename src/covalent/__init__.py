@@ -4,3 +4,4 @@ from .fukui import FukuiIndex
 from .truncate import truncate
 from .reaction import Reaction
 from .protonaffinity import ProtonAffinity
+from .prune import prune
