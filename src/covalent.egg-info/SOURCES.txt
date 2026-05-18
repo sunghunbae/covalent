@@ -5,8 +5,9 @@ src/covalent/carbanion.py
 src/covalent/electrophilicity.py
 src/covalent/fukui.py
 src/covalent/geometry.py
-src/covalent/intermediate.py
 src/covalent/protonaffinity.py
+src/covalent/prune.py
+src/covalent/reaction.py
 src/covalent/thermodynamics.py
 src/covalent/transitionstate.py
 src/covalent.egg-info/PKG-INFO
@@ -15,8 +16,10 @@ src/covalent.egg-info/dependency_links.txt
 src/covalent.egg-info/top_level.txt
 src/covalent/xtb/__init__.py
 src/covalent/xtb/wrapper.py
+test/test_carbanion_formation.py
+test/test_free_energy.py
 test/test_fukui.py
-test/test_geometry.py
-test/test_intermediate.py
-test/test_scaling.py
+test/test_geometry_and_omega.py
+test/test_prune.py
+test/test_reaction.py
 test/test_solvation.py

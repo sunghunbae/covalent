@@ -1,4 +1,5 @@
 from rdkit import Chem
+from rdkit.Chem import AllChem
 
 
 class Reaction:
@@ -58,7 +59,9 @@ class Reaction:
 
         self.reactant_smiles : str = reactant_smiles
         self.reactant_rdmolH : Chem.Mol | None = None
+
         self.thiol_smiles : str = thiol_smiles
+        
         self.alpha_idx : int | None = alpha_idx
         self.beta_idx : int | None = beta_idx
         self.verbose : bool = verbose
@@ -230,6 +233,12 @@ class Reaction:
         except Exception as e:
             raise ValueError(f"Sanitization failed after carbanion construction: {e}")
         
+        try:
+            AllChem.EmbedMolecule(combined, AllChem.ETKDGv3())
+            AllChem.MMFFOptimizeMolecule(combined)
+        except Exception as e:
+            raise ValueError(f"MMFF optimization failed after carbanion construction: {e}")
+        
         self.carbanion_rdmol = Chem.Mol(combined)
         self.carbanion_smiles = Chem.MolToSmiles(combined)
         self.carbanion_charge = sum(atom.GetFormalCharge() for atom in combined.GetAtoms())
@@ -255,7 +264,8 @@ class Reaction:
         self.product_smiles = Chem.MolToSmiles(combined)
 
         if self.verbose:
-            print(f"\n  Neutral reactant         : {self.reactant_smiles}")
+            print()
+            print(f"  Neutral reactant         : {self.reactant_smiles}")
             print(f"  Reaction sites           : {len(self.sites)}")
             print(f"  EWG type detected        : {self.ewg_type}")
             print(f"  α-carbanion intermediate : {self.carbanion_smiles}")

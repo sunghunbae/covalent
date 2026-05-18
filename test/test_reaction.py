@@ -17,7 +17,7 @@ for name, smiles, thiol in test_cases:
     print(f"\n▶ {name}")
     try:
         rxn = Reaction(smiles, thiol_smiles=thiol, verbose=True)
-        print(f"  Michael acceptor SMILES: {smiles}")
+        print(f"  Reactant SMILES: {smiles}")
         print(f"  Thiol SMILES: {thiol}")
         print(f"  Alpha carbon index: {rxn.alpha_idx}")
         print(f"  Beta carbon index: {rxn.beta_idx}")
