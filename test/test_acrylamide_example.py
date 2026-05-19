@@ -6,7 +6,8 @@ import time
 import psi4
 
 
-num_threads = 24
+num_threads = 10
+
 psi4.set_num_threads(num_threads)
 
 rxn = Reaction(reactant_smiles="C=CC(=O)N", thiol_smiles="SC", verbose=True)

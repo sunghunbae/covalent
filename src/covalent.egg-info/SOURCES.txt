@@ -16,10 +16,12 @@ src/covalent.egg-info/dependency_links.txt
 src/covalent.egg-info/top_level.txt
 src/covalent/xtb/__init__.py
 src/covalent/xtb/wrapper.py
-test/test_carbanion_formation.py
+test/test_acrylamide_example.py
 test/test_free_energy.py
 test/test_fukui.py
 test/test_geometry_and_omega.py
+test/test_methyl_thiol.py
 test/test_prune.py
 test/test_reaction.py
+test/test_serialize.py
 test/test_solvation.py
