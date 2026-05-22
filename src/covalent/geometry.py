@@ -158,15 +158,11 @@ class Geometry():
                  basis: str = '6-311+G(d,p)',
                  solvent: str | None = None,
                  solvation_model: str = 'pcm',
-                 max_iter: int = 200,
-                 memory: str = '4 GB', 
-                 num_threads: int = 4) -> None:
+                 max_iter: int = 500) -> None:
         """
         Embed with RDKit MMFF, then optimize with Psi4 DFT.
         Returns (coords_Nx3, atom_symbols).
         """
-        psi4.set_memory(memory)
-        psi4.set_num_threads(num_threads)
         if solvent:
             psi4.set_options({
                 "basis": basis,
@@ -270,9 +266,7 @@ class Geometry():
                             functional: str = "wb97x-d", 
                             basis: str  = "6-311+G(d,p)",
                             solvent: str | None = None,
-                            solvation_model: str = 'pcm',
-                            memory: str = "4 GB", 
-                            num_threads: int = 4) -> float:
+                            solvation_model: str = 'pcm') -> float:
         """
         Compute a single-point energy at a previously optimised geometry.
         functional : str, optional
@@ -288,8 +282,6 @@ class Geometry():
         -------
         float : electronic energy in Hartree
         """
-        psi4.set_memory(memory)
-        psi4.set_num_threads(num_threads)
         if solvent:
             psi4.set_options({
                 "basis": basis,
@@ -328,9 +320,7 @@ class Geometry():
                           basis: str = '6-311+G(d,p)',
                           scale_factor: float = 1.0,
                           temperature: float = 298.15,
-                          pressure: float = 101325.0,
-                          memory: str = '4 GB',
-                          num_threads: int = 4) -> float:
+                          pressure: float = 101325.0) -> float:
         """
         Perform a frequency calculation, scale the frequencies by a given factor, and compute thermochemical properties.
         Parameters
@@ -353,8 +343,6 @@ class Geometry():
         float
             The corrected Gibbs free energy in hartree.
         """
-        psi4.set_memory(memory)
-        psi4.set_num_threads(num_threads)
         psi4.set_options({
             "basis": basis,
             "scf_type": "df", # density fitting - faster & more stable

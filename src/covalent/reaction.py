@@ -41,7 +41,7 @@ class Reaction:
     }
 
     def __init__(self, 
-                 reactant_smiles: str,
+                 reactant: str | Chem.Mol,
                  thiol_smiles: str = "SC",
                  alpha_idx: int | None = None,
                  beta_idx: int | None = None,
@@ -56,9 +56,15 @@ class Reaction:
             beta_idx                : Override auto-detected beta carbon atom index
             verbose                 : Print detection details
         """
+        if isinstance(reactant, Chem.Mol):
+            self.reactant_smiles : str = Chem.MolToSmiles(reactant)
+            self.reactant_rdmolH : Chem.Mol = Chem.RWMol(Chem.AddHs(reactant))
+        elif isinstance(reactant, str):
+            self.reactant_smiles : str = reactant
+            self.reactant_rdmolH : Chem.Mol = Chem.RWMol(Chem.AddHs(Chem.MolFromSmiles(reactant)))
+        else:
+            raise ValueError("reactant must be a SMILES string or an RDKit Mol object")
 
-        self.reactant_smiles : str = reactant_smiles
-        self.reactant_rdmolH : Chem.Mol | None = None
 
         self.thiol_smiles : str = thiol_smiles
         
@@ -143,13 +149,6 @@ class Reaction:
         Raises:
             ValueError: if no Michael acceptor pattern is found and no indices given
         """
-        # ── Step 1: Parse input ───────────────────────────────────────────────────
-        self.reactant_rdmolH = Chem.MolFromSmiles(self.reactant_smiles)
-        if self.reactant_rdmolH is None:
-            raise ValueError(f"Could not parse SMILES: {self.reactant_smiles}")
-        self.reactant_rdmolH = Chem.RWMol(Chem.AddHs(self.reactant_rdmolH)) 
-        # explicit H needed for carbanion geometry
-        
         # ── Step 2: Detect Michael acceptor site(s) ───────────────────────────────
         self.ewg_type = "user_defined"
         
