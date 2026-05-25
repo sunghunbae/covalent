@@ -29,7 +29,7 @@ for model_name in [
     # compile_model=True is recommended for GPU usage
 
     for dataset in [
-        '../data/Liu_et_al_2025/si',
+        '../data/Liu_et_al_2023/si',
         '../data/Danilack_et_al_2024/si/S2', 
         '../data/Danilack_et_al_2024/si/S3', 
         '../data/Danilack_et_al_2024/si/S4', 

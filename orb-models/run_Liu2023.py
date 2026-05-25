@@ -20,9 +20,9 @@ orbff, atoms_adapter = pretrained.orb_v3_conservative_inf_omat(device=device)
 calc = ORBCalculator(orbff, atoms_adapter=atoms_adapter, device=device)
 
 
-workdir = Path(f"../data/Liu_et_al_2025/si/")
+workdir = Path(f"../data/Liu_et_al_2023/si/")
 
-outdir = Path(f"../data/Liu_et_al_2025/orb_opt/")
+outdir = Path(f"../data/Liu_et_al_2023/orb_opt/")
 outdir.mkdir(exist_ok=True, parents=True)
 outfile = outdir / "energies.json"
 

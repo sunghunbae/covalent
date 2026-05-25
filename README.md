@@ -6,6 +6,7 @@ Experimental datasets of GSH t<sub>1/2</sub> (min), along with corresponding mol
 
 > `Name`,`SMILES`,`GSH_half_life_min`
 
+* R. Liu, E. A. Vázquez-Montelongo, S. Ma, J. Shen, Quantum descriptors for predicting and understanding the structure-activity relationships of Michael acceptor warheads. J. Chem. Inf. Model. 63, 4912–4923 (2023).
 * A. D. Danilack, et al., Reactivities of acrylamide warheads toward cysteine targets: a QM/ML approach to covalent inhibitor design. J. Comput. Aided Mol. Des. 38, 21 (2024).
 * R. A. Ward, et al., Structure- and reactivity-based development of covalent inhibitors of the activating and gatekeeper mutant forms of the epidermal growth factor receptor (EGFR). J. Med. Chem. 56, 7025–7048 (2013).
 * M. E. Flanagan, et al., Chemical and computational methods for the characterization of covalent reactive groups for the prospective design of irreversible inhibitors. J. Med. Chem. 57, 10072–10079 (2014).
@@ -14,10 +15,11 @@ Experimental datasets of GSH t<sub>1/2</sub> (min), along with corresponding mol
 
 | Filename | Reference |
 | -------- | --------- |
-| data/Danilack_et_al_2024_table_S2.csv | Ward, <i>et al.</i> (2013) |
-| data/Danilack_et_al_2024_table_S3.csv | Flanagan <i>et al.</i> (2014) |
-| data/Danilack_et_al_2024_table_S4.csv | Cee <i>et al.</i> (2015) |
-| data/Danilack_et_al_2024_table_S5.csv | Lonsdale <i>et al.</i> (2017) |
+| data/Liu_et_al_2023/si/ | Liu <i>et al.</i> (2023) |
+| data/Danilack_et_al_2024/si/S2.csv | Ward, <i>et al.</i> (2013) |
+| data/Danilack_et_al_2024/si/S3.csv | Flanagan <i>et al.</i> (2014) |
+| data/Danilack_et_al_2024/si/S4.csv | Cee <i>et al.</i> (2015) |
+| data/Danilack_et_al_2024/si/S5.csv | Lonsdale <i>et al.</i> (2017) |
 
 ## Activation Energy (E<sub>a</sub>)
 

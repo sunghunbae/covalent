@@ -3,6 +3,9 @@
 !.pixi/config.toml
 .pytest_cache/*
 # cache
+.cache/*
 .nv/*
 .triton/*
-.cache/*
+data/.cache/*
+data/.nv/*
+data/.cache/*
