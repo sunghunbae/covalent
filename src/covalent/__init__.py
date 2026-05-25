@@ -1,5 +1,6 @@
 from .prune import prune
 from .reaction import Reaction
+from .michaeladdition import MichaelAddition
 from .geometry import Geometry
 from .fukui import FukuiIndex
 from .electrophilicity import omega

@@ -2,3 +2,7 @@
 .pixi/*
 !.pixi/config.toml
 .pytest_cache/*
+# cache
+.nv/*
+.triton/*
+.cache/*

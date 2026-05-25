@@ -1,0 +1,854 @@
+{
+    "1": {
+        "E(initial, kcal/mol)": -395460.9066913734,
+        "E(rattled, kcal/mol)": -395459.29723988,
+        "E(opt, kcal/mol)": -395461.73066635616,
+        "time(opt, sec)": 6.001048407997587
+    },
+    "10": {
+        "E(initial, kcal/mol)": -107272.79327941916,
+        "E(rattled, kcal/mol)": -107271.62679113231,
+        "E(opt, kcal/mol)": -107272.98920301042,
+        "time(opt, sec)": 16.897336171998177
+    },
+    "10_TS": {
+        "E(initial, kcal/mol)": -382261.9579416284,
+        "E(rattled, kcal/mol)": -382261.52032525366,
+        "E(opt, kcal/mol)": -382263.1184136889,
+        "time(opt, sec)": 3.7998812570003793
+    },
+    "10_adduct": {
+        "E(initial, kcal/mol)": -382638.21357912733,
+        "E(rattled, kcal/mol)": -382637.42623137357,
+        "E(opt, kcal/mol)": -382638.4800930066,
+        "time(opt, sec)": 0.6675630520039704
+    },
+    "10_carbanion": {
+        "E(initial, kcal/mol)": -382262.80576042674,
+        "E(rattled, kcal/mol)": -382262.5282758101,
+        "E(opt, kcal/mol)": -382264.5783661871,
+        "time(opt, sec)": 2.162565042002825
+    },
+    "11": {
+        "E(initial, kcal/mol)": -337535.60547084775,
+        "E(rattled, kcal/mol)": -337534.1113755042,
+        "E(opt, kcal/mol)": -337536.3691903541,
+        "time(opt, sec)": 1.7415330390067538
+    },
+    "11_TS": {
+        "E(initial, kcal/mol)": -612519.5398481487,
+        "E(rattled, kcal/mol)": -612517.0435165194,
+        "E(opt, kcal/mol)": -612529.2988274274,
+        "time(opt, sec)": 5.89394969199202
+    },
+    "11_adduct": {
+        "E(initial, kcal/mol)": -612895.7131502118,
+        "E(rattled, kcal/mol)": -612892.2499794064,
+        "E(opt, kcal/mol)": -612896.8734806181,
+        "time(opt, sec)": 3.63642106098996
+    },
+    "11_carbanion": {
+        "E(initial, kcal/mol)": -612523.9845453739,
+        "E(rattled, kcal/mol)": -612520.2341131226,
+        "E(opt, kcal/mol)": -612527.3977912735,
+        "time(opt, sec)": 5.7490937230031705
+    },
+    "12": {
+        "E(initial, kcal/mol)": -252369.01827039514,
+        "E(rattled, kcal/mol)": -252368.00245503892,
+        "E(opt, kcal/mol)": -252369.53626624614,
+        "time(opt, sec)": 1.3516267869999865
+    },
+    "12_TS": {
+        "E(initial, kcal/mol)": -527359.0532181042,
+        "E(rattled, kcal/mol)": -527357.7582854652,
+        "E(opt, kcal/mol)": -527362.6046111862,
+        "time(opt, sec)": 6.877633053998579
+    },
+    "12_adduct": {
+        "E(initial, kcal/mol)": -527728.7919144471,
+        "E(rattled, kcal/mol)": -527726.7749000218,
+        "E(opt, kcal/mol)": -527730.2450053643,
+        "time(opt, sec)": 4.410493352988851
+    },
+    "12_carbanion": {
+        "E(initial, kcal/mol)": -527358.4465267027,
+        "E(rattled, kcal/mol)": -527356.8900769481,
+        "E(opt, kcal/mol)": -527360.4940604506,
+        "time(opt, sec)": 2.8814808540046215
+    },
+    "13": {
+        "E(initial, kcal/mol)": -300374.44864819094,
+        "E(rattled, kcal/mol)": -300373.11210648256,
+        "E(opt, kcal/mol)": -300375.4913128883,
+        "time(opt, sec)": 1.4361463859968353
+    },
+    "13_TS": {
+        "E(initial, kcal/mol)": -575360.1595556703,
+        "E(rattled, kcal/mol)": -575358.2303357153,
+        "E(opt, kcal/mol)": -575369.9744226658,
+        "time(opt, sec)": 6.018384688999504
+    },
+    "13_adduct": {
+        "E(initial, kcal/mol)": -575738.8874224896,
+        "E(rattled, kcal/mol)": -575737.0006320402,
+        "E(opt, kcal/mol)": -575740.8250014049,
+        "time(opt, sec)": 6.986124549002852
+    },
+    "13_carbanion": {
+        "E(initial, kcal/mol)": -575365.0654954092,
+        "E(rattled, kcal/mol)": -575362.8819017069,
+        "E(opt, kcal/mol)": -575369.9446486369,
+        "time(opt, sec)": 8.464575627003796
+    },
+    "14": {
+        "E(initial, kcal/mol)": -155287.5732025682,
+        "E(rattled, kcal/mol)": -155287.28913280222,
+        "E(opt, kcal/mol)": -155288.51306168508,
+        "time(opt, sec)": 0.7850234139914392
+    },
+    "14_TS": {
+        "E(initial, kcal/mol)": -430267.7115389197,
+        "E(rattled, kcal/mol)": -430267.09649648366,
+        "E(opt, kcal/mol)": -430273.9168654828,
+        "time(opt, sec)": 3.3773464529949706
+    },
+    "14_adduct": {
+        "E(initial, kcal/mol)": -430651.7664232634,
+        "E(rattled, kcal/mol)": -430650.7118698814,
+        "E(opt, kcal/mol)": -430653.07891665754,
+        "time(opt, sec)": 6.000612147006905
+    },
+    "14_carbanion": {
+        "E(initial, kcal/mol)": -430271.1402804303,
+        "E(rattled, kcal/mol)": -430270.1753940463,
+        "E(opt, kcal/mol)": -430273.92223883915,
+        "time(opt, sec)": 3.1368704670021543
+    },
+    "15": {
+        "E(initial, kcal/mol)": -416997.72211423464,
+        "E(rattled, kcal/mol)": -416995.4401858845,
+        "E(opt, kcal/mol)": -416999.1912658199,
+        "time(opt, sec)": 6.758034181999392
+    },
+    "15_TS": {
+        "E(initial, kcal/mol)": -691990.6716592638,
+        "E(rattled, kcal/mol)": -691988.9494565909,
+        "E(opt, kcal/mol)": -692002.770392758,
+        "time(opt, sec)": 8.068381584991585
+    },
+    "15_adduct": {
+        "E(initial, kcal/mol)": -692362.5629048377,
+        "E(rattled, kcal/mol)": -692359.5371455968,
+        "E(opt, kcal/mol)": -692364.0755373231,
+        "time(opt, sec)": 7.471085394994589
+    },
+    "15_carbanion": {
+        "E(initial, kcal/mol)": -691996.62887471,
+        "E(rattled, kcal/mol)": -691993.3031337805,
+        "E(opt, kcal/mol)": -692002.0622350315,
+        "time(opt, sec)": 8.917834354011575
+    },
+    "16": {
+        "E(initial, kcal/mol)": -525800.7529515545,
+        "E(rattled, kcal/mol)": -525797.8189098024,
+        "E(opt, kcal/mol)": -525803.8377151305,
+        "time(opt, sec)": 11.8095430329995
+    },
+    "16H": {
+        "E(initial, kcal/mol)": -526119.0912259674,
+        "E(rattled, kcal/mol)": -526116.417388623,
+        "E(opt, kcal/mol)": -526123.7522600751,
+        "time(opt, sec)": 11.74989106200519
+    },
+    "16H_TS": {
+        "E(initial, kcal/mol)": -801116.8798354695,
+        "E(rattled, kcal/mol)": -801113.1378911322,
+        "E(opt, kcal/mol)": -801128.9616332087,
+        "time(opt, sec)": 14.136736436994397
+    },
+    "16H_adduct": {
+        "E(initial, kcal/mol)": -801480.2587251688,
+        "E(rattled, kcal/mol)": -801476.7662033056,
+        "E(opt, kcal/mol)": -801511.3302004023,
+        "time(opt, sec)": 22.267804877992603
+    },
+    "16H_carbanion": {
+        "E(initial, kcal/mol)": -801122.0401450126,
+        "E(rattled, kcal/mol)": -801118.4107961323,
+        "E(opt, kcal/mol)": -801135.9956583071,
+        "time(opt, sec)": 5.923419002006995
+    },
+    "16_TS": {
+        "E(initial, kcal/mol)": -800795.0571695018,
+        "E(rattled, kcal/mol)": -800792.1114158221,
+        "E(opt, kcal/mol)": -800807.6242169251,
+        "time(opt, sec)": 13.77745261399832
+    },
+    "16_adduct": {
+        "E(initial, kcal/mol)": -801166.5124876823,
+        "E(rattled, kcal/mol)": -801162.9307126533,
+        "E(opt, kcal/mol)": -801169.4813073673,
+        "time(opt, sec)": 4.992332046997035
+    },
+    "16_carbanion": {
+        "E(initial, kcal/mol)": -800798.5076866907,
+        "E(rattled, kcal/mol)": -800795.062122099,
+        "E(opt, kcal/mol)": -800810.7435743693,
+        "time(opt, sec)": 22.528145263000624
+    },
+    "17": {
+        "E(initial, kcal/mol)": -416998.33581624896,
+        "E(rattled, kcal/mol)": -416997.0762222593,
+        "E(opt, kcal/mol)": -416999.4890948487,
+        "time(opt, sec)": 1.9982105769886402
+    },
+    "17_TS": {
+        "E(initial, kcal/mol)": -691990.3090567003,
+        "E(rattled, kcal/mol)": -691988.7535295871,
+        "E(opt, kcal/mol)": -692002.2860154603,
+        "time(opt, sec)": 11.663185312005226
+    },
+    "17_adduct": {
+        "E(initial, kcal/mol)": -692363.1604554636,
+        "E(rattled, kcal/mol)": -692360.9385669519,
+        "E(opt, kcal/mol)": -692364.7143728659,
+        "time(opt, sec)": 4.298939223997877
+    },
+    "17_carbanion": {
+        "E(initial, kcal/mol)": -691998.7507868072,
+        "E(rattled, kcal/mol)": -691996.4943983571,
+        "E(opt, kcal/mol)": -692002.2753805331,
+        "time(opt, sec)": 4.603900892994716
+    },
+    "18": {
+        "E(initial, kcal/mol)": -525802.2719677591,
+        "E(rattled, kcal/mol)": -525800.1174376974,
+        "E(opt, kcal/mol)": -525804.431008546,
+        "time(opt, sec)": 7.200473898003111
+    },
+    "18H": {
+        "E(initial, kcal/mol)": -526120.6240218824,
+        "E(rattled, kcal/mol)": -526117.8667711605,
+        "E(opt, kcal/mol)": -526124.3903398728,
+        "time(opt, sec)": 13.833833173994208
+    },
+    "18H_TS": {
+        "E(initial, kcal/mol)": -801112.3237507205,
+        "E(rattled, kcal/mol)": -801109.2564774373,
+        "E(opt, kcal/mol)": -801125.7152886422,
+        "time(opt, sec)": 15.676607895002235
+    },
+    "18H_adduct": {
+        "E(initial, kcal/mol)": -801498.8136029649,
+        "E(rattled, kcal/mol)": -801496.9256363538,
+        "E(opt, kcal/mol)": -801505.2705333133,
+        "time(opt, sec)": 11.502260342997033
+    },
+    "18H_adduct_1": {
+        "E(initial, kcal/mol)": -801498.8136029649,
+        "E(rattled, kcal/mol)": -801496.9256363538,
+        "E(opt, kcal/mol)": -801505.2705333133,
+        "time(opt, sec)": 10.609374091000063
+    },
+    "18H_carbanion": {
+        "E(initial, kcal/mol)": -801112.3382286901,
+        "E(rattled, kcal/mol)": -801108.9549034919,
+        "E(opt, kcal/mol)": -801136.5691069479,
+        "time(opt, sec)": 20.348216796002816
+    },
+    "18_TS": {
+        "E(initial, kcal/mol)": -800794.2747049896,
+        "E(rattled, kcal/mol)": -800791.8887204543,
+        "E(opt, kcal/mol)": -800808.0401646773,
+        "time(opt, sec)": 13.666526754997903
+    },
+    "18_adduct": {
+        "E(initial, kcal/mol)": -801167.4096384775,
+        "E(rattled, kcal/mol)": -801164.5888028552,
+        "E(opt, kcal/mol)": -801170.1627826659,
+        "time(opt, sec)": 7.482275510992622
+    },
+    "18_carbanion": {
+        "E(initial, kcal/mol)": -800798.8252031521,
+        "E(rattled, kcal/mol)": -800796.1407277667,
+        "E(opt, kcal/mol)": -800810.7162791304,
+        "time(opt, sec)": 14.934329139010515
+    },
+    "19": {
+        "E(initial, kcal/mol)": -277952.5894404862,
+        "E(rattled, kcal/mol)": -277950.98838581395,
+        "E(opt, kcal/mol)": -277955.14488816744,
+        "time(opt, sec)": 6.399932883010479
+    },
+    "19_TS": {
+        "E(initial, kcal/mol)": -552932.9887054062,
+        "E(rattled, kcal/mol)": -552930.2789262395,
+        "E(opt, kcal/mol)": -552941.511258656,
+        "time(opt, sec)": 4.1108531360077905
+    },
+    "19_adduct": {
+        "E(initial, kcal/mol)": -553319.5156875257,
+        "E(rattled, kcal/mol)": -553317.1422688265,
+        "E(opt, kcal/mol)": -553320.8933707875,
+        "time(opt, sec)": 2.6199954000039725
+    },
+    "19_carbanion": {
+        "E(initial, kcal/mol)": -552938.6715984858,
+        "E(rattled, kcal/mol)": -552935.3804580917,
+        "E(opt, kcal/mol)": -552941.5444400364,
+        "time(opt, sec)": 3.966002811997896
+    },
+    "1_TS": {
+        "E(initial, kcal/mol)": -670453.5292367021,
+        "E(rattled, kcal/mol)": -670451.3631959044,
+        "E(opt, kcal/mol)": -670479.7054759976,
+        "time(opt, sec)": 8.545623399011674
+    },
+    "1_adduct_anti": {
+        "E(initial, kcal/mol)": -670817.2055923499,
+        "E(rattled, kcal/mol)": -670814.7986695615,
+        "E(opt, kcal/mol)": -670818.3874975072,
+        "time(opt, sec)": 3.881965830005356
+    },
+    "1_adduct_syn": {
+        "E(initial, kcal/mol)": -670816.1654035514,
+        "E(rattled, kcal/mol)": -670814.2230013866,
+        "E(opt, kcal/mol)": -670817.7789506719,
+        "time(opt, sec)": 6.306884762001573
+    },
+    "1_carbanion": {
+        "E(initial, kcal/mol)": -670475.6083404797,
+        "E(rattled, kcal/mol)": -670471.4904825067,
+        "E(opt, kcal/mol)": -670478.5772431574,
+        "time(opt, sec)": 7.297693729997263
+    },
+    "2": {
+        "E(initial, kcal/mol)": -358312.36737683887,
+        "E(rattled, kcal/mol)": -358310.3311555112,
+        "E(opt, kcal/mol)": -358313.48263261165,
+        "time(opt, sec)": 2.5670575260010082
+    },
+    "20": {
+        "E(initial, kcal/mol)": -179967.7769190894,
+        "E(rattled, kcal/mol)": -179967.2478872172,
+        "E(opt, kcal/mol)": -179968.72666792697,
+        "time(opt, sec)": 1.0392356789961923
+    },
+    "20_TS": {
+        "E(initial, kcal/mol)": -454947.7542211005,
+        "E(rattled, kcal/mol)": -454946.67010623176,
+        "E(opt, kcal/mol)": -454953.3937151646,
+        "time(opt, sec)": 6.753823484992608
+    },
+    "20_adduct": {
+        "E(initial, kcal/mol)": -455331.99212247075,
+        "E(rattled, kcal/mol)": -455330.6919478942,
+        "E(opt, kcal/mol)": -455333.5265176502,
+        "time(opt, sec)": 4.82466248300625
+    },
+    "20_carbanion": {
+        "E(initial, kcal/mol)": -454950.8826935418,
+        "E(rattled, kcal/mol)": -454949.51249219145,
+        "E(opt, kcal/mol)": -454953.3903864636,
+        "time(opt, sec)": 2.8175217550015077
+    },
+    "21": {
+        "E(initial, kcal/mol)": -391604.9797131555,
+        "E(rattled, kcal/mol)": -391603.8651452861,
+        "E(opt, kcal/mol)": -391605.8772467449,
+        "time(opt, sec)": 1.1095022210065508
+    },
+    "21_TS": {
+        "E(initial, kcal/mol)": -666591.4437681033,
+        "E(rattled, kcal/mol)": -666590.5676858594,
+        "E(opt, kcal/mol)": -666602.5335682739,
+        "time(opt, sec)": 7.43213936999382
+    },
+    "21_adduct": {
+        "E(initial, kcal/mol)": -666970.6303874132,
+        "E(rattled, kcal/mol)": -666969.7510097938,
+        "E(opt, kcal/mol)": -666972.1556810974,
+        "time(opt, sec)": 3.652367802002118
+    },
+    "21_carbanion": {
+        "E(initial, kcal/mol)": -666599.4808745219,
+        "E(rattled, kcal/mol)": -666598.8817809958,
+        "E(opt, kcal/mol)": -666602.4814990354,
+        "time(opt, sec)": 5.839336254008231
+    },
+    "22": {
+        "E(initial, kcal/mol)": -325059.12341658736,
+        "E(rattled, kcal/mol)": -325057.706314334,
+        "E(opt, kcal/mol)": -325060.1454927516,
+        "time(opt, sec)": 2.1503261320031015
+    },
+    "22_TS": {
+        "E(initial, kcal/mol)": -600040.8452678836,
+        "E(rattled, kcal/mol)": -600038.8877765764,
+        "E(opt, kcal/mol)": -600050.302864349,
+        "time(opt, sec)": 14.786124654012383
+    },
+    "22_adduct": {
+        "E(initial, kcal/mol)": -600423.6666573706,
+        "E(rattled, kcal/mol)": -600420.9844695964,
+        "E(opt, kcal/mol)": -600425.2770017606,
+        "time(opt, sec)": 8.07800407600007
+    },
+    "22_carbanion": {
+        "E(initial, kcal/mol)": -600044.3280016424,
+        "E(rattled, kcal/mol)": -600041.7640507298,
+        "E(opt, kcal/mol)": -600050.2276509542,
+        "time(opt, sec)": 17.73209462899831
+    },
+    "23": {
+        "E(initial, kcal/mol)": -396970.73769108107,
+        "E(rattled, kcal/mol)": -396968.6847832856,
+        "E(opt, kcal/mol)": -396971.9904126725,
+        "time(opt, sec)": 4.555198775997269
+    },
+    "23_TS": {
+        "E(initial, kcal/mol)": -671952.4925335941,
+        "E(rattled, kcal/mol)": -671949.9055434194,
+        "E(opt, kcal/mol)": -671961.5529611488,
+        "time(opt, sec)": 15.825372417006292
+    },
+    "23_adduct": {
+        "E(initial, kcal/mol)": -672335.2373194704,
+        "E(rattled, kcal/mol)": -672332.5048785417,
+        "E(opt, kcal/mol)": -672337.1735103299,
+        "time(opt, sec)": 6.915673247989616
+    },
+    "23_carbanion": {
+        "E(initial, kcal/mol)": -671955.6465553507,
+        "E(rattled, kcal/mol)": -671952.344220503,
+        "E(opt, kcal/mol)": -671959.8932011116,
+        "time(opt, sec)": 8.328350786992814
+    },
+    "24": {
+        "E(initial, kcal/mol)": -325049.33912326006,
+        "E(rattled, kcal/mol)": -325047.80924010737,
+        "E(opt, kcal/mol)": -325050.99146457075,
+        "time(opt, sec)": 5.523767786988174
+    },
+    "24_TS": {
+        "E(initial, kcal/mol)": -600032.5395017952,
+        "E(rattled, kcal/mol)": -600030.6898692959,
+        "E(opt, kcal/mol)": -600045.6947800578,
+        "time(opt, sec)": 9.651234438992105
+    },
+    "24_adduct": {
+        "E(initial, kcal/mol)": -600414.4561430046,
+        "E(rattled, kcal/mol)": -600412.6377303341,
+        "E(opt, kcal/mol)": -600416.1553081733,
+        "time(opt, sec)": 4.811554493004223
+    },
+    "24_carbanion": {
+        "E(initial, kcal/mol)": -600042.6379296815,
+        "E(rattled, kcal/mol)": -600040.6302978703,
+        "E(opt, kcal/mol)": -600046.203506654,
+        "time(opt, sec)": 7.510248060993035
+    },
+    "25": {
+        "E(initial, kcal/mol)": -372284.37708758854,
+        "E(rattled, kcal/mol)": -372282.82637351874,
+        "E(opt, kcal/mol)": -372286.0562190393,
+        "time(opt, sec)": 6.909064578998368
+    },
+    "25_TS": {
+        "E(initial, kcal/mol)": -647267.9787791453,
+        "E(rattled, kcal/mol)": -647266.3912589855,
+        "E(opt, kcal/mol)": -647279.5348407296,
+        "time(opt, sec)": 16.290943796993815
+    },
+    "25_adduct": {
+        "E(initial, kcal/mol)": -647646.973788518,
+        "E(rattled, kcal/mol)": -647645.0091152982,
+        "E(opt, kcal/mol)": -647651.5525356655,
+        "time(opt, sec)": 14.480957806008519
+    },
+    "25_carbanion": {
+        "E(initial, kcal/mol)": -647273.8847869304,
+        "E(rattled, kcal/mol)": -647271.373294474,
+        "E(opt, kcal/mol)": -647279.8099788749,
+        "time(opt, sec)": 9.450172605997068
+    },
+    "26": {
+        "E(initial, kcal/mol)": -300499.308163335,
+        "E(rattled, kcal/mol)": -300497.9957399297,
+        "E(opt, kcal/mol)": -300500.5812562321,
+        "time(opt, sec)": 5.358121480996488
+    },
+    "26_TS": {
+        "E(initial, kcal/mol)": -575477.6331560491,
+        "E(rattled, kcal/mol)": -575476.8378976588,
+        "E(opt, kcal/mol)": -575490.867945009,
+        "time(opt, sec)": 35.64176752800995
+    },
+    "26_adduct": {
+        "E(initial, kcal/mol)": -575862.0456125925,
+        "E(rattled, kcal/mol)": -575859.1236525931,
+        "E(opt, kcal/mol)": -575864.3540623297,
+        "time(opt, sec)": 26.474707079993095
+    },
+    "26_carbanion": {
+        "E(initial, kcal/mol)": -575481.3078093238,
+        "E(rattled, kcal/mol)": -575478.9009822947,
+        "E(opt, kcal/mol)": -575490.9190271881,
+        "time(opt, sec)": 28.899957332003396
+    },
+    "27": {
+        "E(initial, kcal/mol)": -288771.1377919149,
+        "E(rattled, kcal/mol)": -288770.0870793073,
+        "E(opt, kcal/mol)": -288772.7526082733,
+        "time(opt, sec)": 5.8185415499901865
+    },
+    "27H": {
+        "E(initial, kcal/mol)": -289074.2510759456,
+        "E(rattled, kcal/mol)": -289072.1641813802,
+        "E(opt, kcal/mol)": -289112.1644148976,
+        "time(opt, sec)": 10.011964507008088
+    },
+    "27H_TS": {
+        "E(initial, kcal/mol)": -564052.9589741726,
+        "E(rattled, kcal/mol)": -564051.1706838015,
+        "E(opt, kcal/mol)": -564123.5798791704,
+        "time(opt, sec)": 16.763477722997777
+    },
+    "27H_adduct": {
+        "E(initial, kcal/mol)": -564429.0764307796,
+        "E(rattled, kcal/mol)": -564427.3820485177,
+        "E(opt, kcal/mol)": -564464.9197284115,
+        "time(opt, sec)": 20.595110462993034
+    },
+    "27H_carbanion": {
+        "E(initial, kcal/mol)": -564051.3659251432,
+        "E(rattled, kcal/mol)": -564049.4424226815,
+        "E(opt, kcal/mol)": -564103.9564277877,
+        "time(opt, sec)": 12.691491888006567
+    },
+    "27_TS": {
+        "E(initial, kcal/mol)": -563750.060837193,
+        "E(rattled, kcal/mol)": -563748.8221141675,
+        "E(opt, kcal/mol)": -563758.4608215088,
+        "time(opt, sec)": 13.113537341007032
+    },
+    "27_adduct": {
+        "E(initial, kcal/mol)": -564135.3629447221,
+        "E(rattled, kcal/mol)": -564133.3838269918,
+        "E(opt, kcal/mol)": -564137.9645843114,
+        "time(opt, sec)": 6.624776997996378
+    },
+    "27_carbanion": {
+        "E(initial, kcal/mol)": -563753.926621999,
+        "E(rattled, kcal/mol)": -563752.1692767286,
+        "E(opt, kcal/mol)": -563758.5489695376,
+        "time(opt, sec)": 9.838626238997676
+    },
+    "28": {
+        "E(initial, kcal/mol)": -313760.0670685844,
+        "E(rattled, kcal/mol)": -313757.21497686673,
+        "E(opt, kcal/mol)": -313796.9801682523,
+        "time(opt, sec)": 8.781216153001878
+    },
+    "28_TS": {
+        "E(initial, kcal/mol)": -588730.9250718603,
+        "E(rattled, kcal/mol)": -588729.0814541904,
+        "E(opt, kcal/mol)": -588798.303384399,
+        "time(opt, sec)": 10.01989652600605
+    },
+    "28_adduct": {
+        "E(initial, kcal/mol)": -589112.4060642602,
+        "E(rattled, kcal/mol)": -589110.3222442513,
+        "E(opt, kcal/mol)": -589123.2465294274,
+        "time(opt, sec)": 15.865045683007338
+    },
+    "28_carbanion": {
+        "E(initial, kcal/mol)": -588724.82042984,
+        "E(rattled, kcal/mol)": -588722.9343946367,
+        "E(opt, kcal/mol)": -588800.6521847345,
+        "time(opt, sec)": 17.398846039010095
+    },
+    "29": {
+        "E(initial, kcal/mol)": -325062.1651111998,
+        "E(rattled, kcal/mol)": -325060.8567011467,
+        "E(opt, kcal/mol)": -325063.8252571512,
+        "time(opt, sec)": 6.510490769011085
+    },
+    "29_TS": {
+        "E(initial, kcal/mol)": -600044.6628859104,
+        "E(rattled, kcal/mol)": -600043.2447407994,
+        "E(opt, kcal/mol)": -600056.3171505019,
+        "time(opt, sec)": 7.466154599998845
+    },
+    "29_adduct_anti": {
+        "E(initial, kcal/mol)": -600426.3121656759,
+        "E(rattled, kcal/mol)": -600424.2161090688,
+        "E(opt, kcal/mol)": -600427.5392619383,
+        "time(opt, sec)": 2.5657727779907873
+    },
+    "29_adduct_syn": {
+        "E(initial, kcal/mol)": -600425.8489090918,
+        "E(rattled, kcal/mol)": -600423.1889355945,
+        "E(opt, kcal/mol)": -600427.2777244577,
+        "time(opt, sec)": 6.1289800480008125
+    },
+    "29_carbanion": {
+        "E(initial, kcal/mol)": -600051.8705568719,
+        "E(rattled, kcal/mol)": -600050.0272425171,
+        "E(opt, kcal/mol)": -600056.3533427467,
+        "time(opt, sec)": 9.068126835001749
+    },
+    "2_TS": {
+        "E(initial, kcal/mol)": -633301.2727985394,
+        "E(rattled, kcal/mol)": -633300.117255965,
+        "E(opt, kcal/mol)": -633328.3620853843,
+        "time(opt, sec)": 8.67211388600117
+    },
+    "2_adduct_anti": {
+        "E(initial, kcal/mol)": -633665.3867610932,
+        "E(rattled, kcal/mol)": -633663.6722864608,
+        "E(opt, kcal/mol)": -633666.9212968402,
+        "time(opt, sec)": 4.039052967986208
+    },
+    "2_adduct_syn": {
+        "E(initial, kcal/mol)": -633669.3533609575,
+        "E(rattled, kcal/mol)": -633666.0632337981,
+        "E(opt, kcal/mol)": -633671.0765400879,
+        "time(opt, sec)": 5.133929199000704
+    },
+    "2_carbanion": {
+        "E(initial, kcal/mol)": -633324.3477570002,
+        "E(rattled, kcal/mol)": -633321.4014448314,
+        "E(opt, kcal/mol)": -633327.013494535,
+        "time(opt, sec)": 5.076711595989764
+    },
+    "3": {
+        "E(initial, kcal/mol)": -250364.488362622,
+        "E(rattled, kcal/mol)": -250362.96121306712,
+        "E(opt, kcal/mol)": -250365.0804704323,
+        "time(opt, sec)": 1.2635730790061643
+    },
+    "30": {
+        "E(initial, kcal/mol)": -441686.59700717917,
+        "E(rattled, kcal/mol)": -441684.6009160771,
+        "E(opt, kcal/mol)": -441688.14932381874,
+        "time(opt, sec)": 4.17345992999617
+    },
+    "30_TS": {
+        "E(initial, kcal/mol)": -716675.3479096622,
+        "E(rattled, kcal/mol)": -716673.3356171536,
+        "E(opt, kcal/mol)": -716688.2338140877,
+        "time(opt, sec)": 9.5336718109902
+    },
+    "30_adduct_anti": {
+        "E(initial, kcal/mol)": -717047.9874862719,
+        "E(rattled, kcal/mol)": -717044.7632731387,
+        "E(opt, kcal/mol)": -717050.0262935015,
+        "time(opt, sec)": 6.297609964007279
+    },
+    "30_adduct_syn": {
+        "E(initial, kcal/mol)": -717049.6664153185,
+        "E(rattled, kcal/mol)": -717047.9654384993,
+        "E(opt, kcal/mol)": -717051.232064399,
+        "time(opt, sec)": 5.491965120003442
+    },
+    "30_carbanion": {
+        "E(initial, kcal/mol)": -716681.6801677437,
+        "E(rattled, kcal/mol)": -716679.5227377185,
+        "E(opt, kcal/mol)": -716688.2108293144,
+        "time(opt, sec)": 9.66356902901316
+    },
+    "3_TS": {
+        "E(initial, kcal/mol)": -525351.8381757194,
+        "E(rattled, kcal/mol)": -525350.3200225654,
+        "E(opt, kcal/mol)": -525385.5734711214,
+        "time(opt, sec)": 12.145973716993467
+    },
+    "3_adduct": {
+        "E(initial, kcal/mol)": -525723.7828148514,
+        "E(rattled, kcal/mol)": -525723.1180819481,
+        "E(opt, kcal/mol)": -525724.6466515547,
+        "time(opt, sec)": 3.019283599991468
+    },
+    "3_carbanion": {
+        "E(initial, kcal/mol)": -525380.1427026925,
+        "E(rattled, kcal/mol)": -525377.9740337756,
+        "E(opt, kcal/mol)": -525382.1000501846,
+        "time(opt, sec)": 3.875102905993117
+    },
+    "4": {
+        "E(initial, kcal/mol)": -213215.56710648813,
+        "E(rattled, kcal/mol)": -213213.45145994137,
+        "E(opt, kcal/mol)": -213216.38327848574,
+        "time(opt, sec)": 1.2265550070005702
+    },
+    "4_TS": {
+        "E(initial, kcal/mol)": -488216.74916957173,
+        "E(rattled, kcal/mol)": -488214.31398044754,
+        "E(opt, kcal/mol)": -488229.403557148,
+        "time(opt, sec)": 7.33526580799662
+    },
+    "4_adduct": {
+        "E(initial, kcal/mol)": -488573.775773951,
+        "E(rattled, kcal/mol)": -488572.0903032156,
+        "E(opt, kcal/mol)": -488574.93826768815,
+        "time(opt, sec)": 3.681139713997254
+    },
+    "4_carbanion": {
+        "E(initial, kcal/mol)": -488230.8555698924,
+        "E(rattled, kcal/mol)": -488230.4588518908,
+        "E(opt, kcal/mol)": -488232.37519772566,
+        "time(opt, sec)": 3.248275557998568
+    },
+    "5": {
+        "E(initial, kcal/mol)": -407531.67964948347,
+        "E(rattled, kcal/mol)": -407529.18094100076,
+        "E(opt, kcal/mol)": -407532.36077575776,
+        "time(opt, sec)": 1.5206288500048686
+    },
+    "5_TS": {
+        "E(initial, kcal/mol)": -682529.8105937779,
+        "E(rattled, kcal/mol)": -682527.7735295614,
+        "E(opt, kcal/mol)": -682548.8734619035,
+        "time(opt, sec)": 7.914939013004187
+    },
+    "5_adduct_anti": {
+        "E(initial, kcal/mol)": -682889.3617783985,
+        "E(rattled, kcal/mol)": -682885.3804938983,
+        "E(opt, kcal/mol)": -682890.5861357835,
+        "time(opt, sec)": 4.37920501800545
+    },
+    "5_adduct_syn": {
+        "E(initial, kcal/mol)": -682888.3725955136,
+        "E(rattled, kcal/mol)": -682885.98009123,
+        "E(opt, kcal/mol)": -682889.8841012333,
+        "time(opt, sec)": 5.775169919987093
+    },
+    "5_carbanion": {
+        "E(initial, kcal/mol)": -682543.6904429004,
+        "E(rattled, kcal/mol)": -682541.4317941975,
+        "E(opt, kcal/mol)": -682546.3087345315,
+        "time(opt, sec)": 7.1047735050087795
+    },
+    "6": {
+        "E(initial, kcal/mol)": -403734.31137046637,
+        "E(rattled, kcal/mol)": -403732.73772302165,
+        "E(opt, kcal/mol)": -403735.0648293327,
+        "time(opt, sec)": 4.8658833090012195
+    },
+    "6_TS": {
+        "E(initial, kcal/mol)": -678731.6069223405,
+        "E(rattled, kcal/mol)": -678729.5489369831,
+        "E(opt, kcal/mol)": -678745.5935497426,
+        "time(opt, sec)": 10.763441792005324
+    },
+    "6_adduct_anti": {
+        "E(initial, kcal/mol)": -679094.7939479506,
+        "E(rattled, kcal/mol)": -679091.1826183429,
+        "E(opt, kcal/mol)": -679096.1788446938,
+        "time(opt, sec)": 5.533172494004248
+    },
+    "6_adduct_syn": {
+        "E(initial, kcal/mol)": -679091.774918371,
+        "E(rattled, kcal/mol)": -679088.9747033817,
+        "E(opt, kcal/mol)": -679093.577958808,
+        "time(opt, sec)": 9.310784277011408
+    },
+    "6_carbanion": {
+        "E(initial, kcal/mol)": -678741.435723504,
+        "E(rattled, kcal/mol)": -678738.6433337948,
+        "E(opt, kcal/mol)": -678745.5487742713,
+        "time(opt, sec)": 6.636330386987538
+    },
+    "7": {
+        "E(initial, kcal/mol)": -393655.59146371955,
+        "E(rattled, kcal/mol)": -393653.5460318364,
+        "E(opt, kcal/mol)": -393656.449264539,
+        "time(opt, sec)": 4.9244328509957995
+    },
+    "7_TS": {
+        "E(initial, kcal/mol)": -668649.2532213905,
+        "E(rattled, kcal/mol)": -668647.2529317565,
+        "E(opt, kcal/mol)": -668660.7885818102,
+        "time(opt, sec)": 9.203893822006648
+    },
+    "7_adduct_anti": {
+        "E(initial, kcal/mol)": -669016.1769718493,
+        "E(rattled, kcal/mol)": -669012.3138631457,
+        "E(opt, kcal/mol)": -669017.6603206324,
+        "time(opt, sec)": 4.727248789000441
+    },
+    "7_adduct_syn": {
+        "E(initial, kcal/mol)": -669012.904923758,
+        "E(rattled, kcal/mol)": -669009.976987927,
+        "E(opt, kcal/mol)": -669014.9914102934,
+        "time(opt, sec)": 6.410332465005922
+    },
+    "7_carbanion": {
+        "E(initial, kcal/mol)": -668654.8369425816,
+        "E(rattled, kcal/mol)": -668652.0529945069,
+        "E(opt, kcal/mol)": -668658.3049623062,
+        "time(opt, sec)": 6.610850070996094
+    },
+    "8": {
+        "E(initial, kcal/mol)": -145198.59287850454,
+        "E(rattled, kcal/mol)": -145197.18847618537,
+        "E(opt, kcal/mol)": -145199.0777627619,
+        "time(opt, sec)": 0.9509254489967134
+    },
+    "8_TS": {
+        "E(initial, kcal/mol)": -420182.35107118497,
+        "E(rattled, kcal/mol)": -420181.77246360393,
+        "E(opt, kcal/mol)": -420193.1092665079,
+        "time(opt, sec)": 6.101092434997554
+    },
+    "8_adduct": {
+        "E(initial, kcal/mol)": -420563.9881459292,
+        "E(rattled, kcal/mol)": -420563.3944137799,
+        "E(opt, kcal/mol)": -420564.507424904,
+        "time(opt, sec)": 1.551224752998678
+    },
+    "8_carbanion": {
+        "E(initial, kcal/mol)": -420190.5946193819,
+        "E(rattled, kcal/mol)": -420189.91231969907,
+        "E(opt, kcal/mol)": -420193.10366773844,
+        "time(opt, sec)": 3.043085034005344
+    },
+    "9": {
+        "E(initial, kcal/mol)": -192439.77014791325,
+        "E(rattled, kcal/mol)": -192439.07192751925,
+        "E(opt, kcal/mol)": -192440.27226456153,
+        "time(opt, sec)": 0.9475181309971958
+    },
+    "9_TS": {
+        "E(initial, kcal/mol)": -467423.6568879916,
+        "E(rattled, kcal/mol)": -467422.8862626156,
+        "E(opt, kcal/mol)": -467430.4929213358,
+        "time(opt, sec)": 5.73989354299556
+    },
+    "9_adduct": {
+        "E(initial, kcal/mol)": -467804.233708903,
+        "E(rattled, kcal/mol)": -467803.03073835076,
+        "E(opt, kcal/mol)": -467804.7684268458,
+        "time(opt, sec)": 0.9983224290044745
+    },
+    "9_carbanion": {
+        "E(initial, kcal/mol)": -467428.2161794643,
+        "E(rattled, kcal/mol)": -467427.21902767656,
+        "E(opt, kcal/mol)": -467430.4903858633,
+        "time(opt, sec)": 3.5607949569966877
+    },
+    "MeSH": {
+        "E(initial, kcal/mol)": -275341.6542813131,
+        "E(rattled, kcal/mol)": -275341.56953651184,
+        "E(opt, kcal/mol)": -275341.7990645036,
+        "time(opt, sec)": 0.3340333579981234
+    },
+    "MeS_": {
+        "E(initial, kcal/mol)": -274890.6206444278,
+        "E(rattled, kcal/mol)": -274890.5700714865,
+        "E(opt, kcal/mol)": -274891.60588792036,
+        "time(opt, sec)": 0.23344515000644606
+    }
+}

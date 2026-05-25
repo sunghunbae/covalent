@@ -49,8 +49,9 @@ def prune(mol: Chem.Mol,
     center = set(center)
 
     # bonds to watch WBO changes, e.g. bonds in the reaction center
-    wbo_watch = [(i,j) for i,j in list(combinations(center, 2)) if mol.GetBondBetweenAtoms(i,j) is not None]
-
+    wbo_watch = [tuple(sorted([i, j])) for i, j in list(combinations(center, 2)) if mol.GetBondBetweenAtoms(i, j) is not None]
+    if verbose:
+        print(f"wbo_watch={wbo_watch}")
     # electronegative atoms are less likely to be pruned
     # electronegative: list[int] = [7, 8, 9, 17, 35]
 
@@ -73,7 +74,8 @@ def prune(mol: Chem.Mol,
     parent = GFN2xTB(rdmolH).singlepoint()
 
     assert hasattr(parent, 'wbo'), "Error: no wbo for parent"
-    
+    assert all([ij in parent.wbo for ij in wbo_watch]), "Error: missing WBOs for some bonds"
+
     if verbose:
         for ij in wbo_watch:
             print(f"parent WBO={parent.wbo[ij]}")
