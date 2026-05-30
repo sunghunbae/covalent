@@ -8,4 +8,4 @@
 .triton/*
 data/.cache/*
 data/.nv/*
-data/.cache/*
+data/.triton/*

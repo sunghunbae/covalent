@@ -8,14 +8,12 @@ from pathlib import Path
 dataset = 'S5'
 
 infile = Path(f"Danilack_et_al_2024/si/{dataset}.csv")
-
 outdir = infile.parent / f"{dataset}"
 outdir.mkdir(parents=True, exist_ok=True)
-outfile = outdir / f"{dataset}_struct.csv"
-
+outfile = infile.parent / f"{dataset}_struct.csv"
 
 with open(infile, "r") as f, open(outfile, "w") as g:
-    g.write("Name,RC,SMILES,Pruned\n")
+    g.write("Name,Original_or_Pruned,RC,SMILES\n")
     for line in f:
         if line.startswith("Name"):
             continue
@@ -38,13 +36,13 @@ with open(infile, "r") as f, open(outfile, "w") as g:
             ('intermediate', rxn_original.carbanion_smiles, Geometry(rdmol=rxn_original.carbanion_rdmol, charge=-1)), 
             ('product', rxn_original.product_smiles, Geometry(smiles=rxn_original.product_smiles)),
             ]:
-            g.write(f"{name},orginal,{rc},{smiles_}\n")
+            g.write(f"{name},original,{rc},{smiles_}\n")
             title = f"{name}_original_{rc}"
-            if (workdir / f"{title}.xyz").exists():
+            if (outdir / f"{title}.xyz").exists():
                 continue
             geom.xtb_optimize()
-            geom.write_xyz(workdir / f"{title}.xyz")
-            print(f"Written optimized geometry for {title} to {workdir / f'{title}.xyz'}")
+            geom.write_xyz(outdir / f"{title}.xyz")
+            print(f"Written optimized geometry for {title} to {outdir / f'{title}.xyz'}")
 
         # ---------------------- PRUNING ------------------        
         frag = prune(mol, center=jk, cap_dummy_atom=1, verbose=False)
@@ -71,8 +69,8 @@ with open(infile, "r") as f, open(outfile, "w") as g:
             ]:
             g.write(f"{name},pruned,{rc},{smiles_}\n")
             title = f"{name}_pruned_{rc}"
-            if (workdir / f"{title}.xyz").exists():
+            if (outdir / f"{title}.xyz").exists():
                 continue
             geom.xtb_optimize()
-            geom.write_xyz(workdir / f"{title}.xyz")
-            print(f"Written optimized geometry for {title} to {workdir / f'{title}.xyz'}")
+            geom.write_xyz(outdir / f"{title}.xyz")
+            print(f"Written optimized geometry for {title} to {outdir / f'{title}.xyz'}")

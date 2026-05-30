@@ -5,6 +5,7 @@ src/covalent/carbanion.py
 src/covalent/electrophilicity.py
 src/covalent/fukui.py
 src/covalent/geometry.py
+src/covalent/michaeladdition.py
 src/covalent/protonaffinity.py
 src/covalent/prune.py
 src/covalent/reaction.py
