@@ -26,3 +26,28 @@ python run_Danilack2024.py
 ls
 python run_aimnet2_models.py 
 exit
+pwd
+ls
+cd aimnet2-models/
+ls
+ls
+ls
+python run_aimnet2_models.py 
+ls
+python run_aimnet2_models.py 
+ls
+cd ..
+ls
+exit
+ls -asl
+ls
+cd aimnet2-models/
+ls
+python run_aimnet2_models_conformers.py 
+python run_aimnet2_models_conformers.py 
+exit
+ls
+cd aimnet2-models/
+ls
+python run_aimnet2_models_conformers.py 
+exit
