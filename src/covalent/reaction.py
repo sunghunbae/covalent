@@ -58,13 +58,13 @@ class Reaction:
         """
         if isinstance(reactant, Chem.Mol):
             self.reactant_smiles : str = Chem.MolToSmiles(reactant)
-            self.reactant_rdmolH : Chem.Mol = Chem.RWMol(Chem.AddHs(reactant))
+            self.reactant_rdmol : Chem.Mol = Chem.RWMol(Chem.AddHs(reactant))
         elif isinstance(reactant, str):
             self.reactant_smiles : str = reactant
-            self.reactant_rdmolH : Chem.Mol = Chem.RWMol(Chem.AddHs(Chem.MolFromSmiles(reactant)))
+            self.reactant_rdmol : Chem.Mol = Chem.RWMol(Chem.AddHs(Chem.MolFromSmiles(reactant)))
         else:
             raise ValueError("reactant must be a SMILES string or an RDKit Mol object")
-
+        self.reactant_charge : int = sum(atom.GetFormalCharge() for atom in self.reactant_rdmol.GetAtoms())
 
         self.thiol_smiles : str = thiol_smiles
         
@@ -78,11 +78,16 @@ class Reaction:
 
         self.product_rdmol : Chem.Mol | None = None
         self.product_smiles : str = ""
+        self.product_charge: int | None = None
         
         self.ewg_type: str = "user_defined"
         self.sites : list[tuple[int, int, str]] = []
 
-        self.build_carbanion_smiles()
+        try:
+            self.build_carbanion_smiles()
+        except:
+            pass
+
 
 
     def find_michael_acceptor_atoms(self) -> None:
@@ -104,7 +109,7 @@ class Reaction:
             if pattern is None:
                 continue
             
-            for match in self.reactant_rdmolH.GetSubstructMatches(pattern):
+            for match in self.reactant_rdmol.GetSubstructMatches(pattern):
                 # match[0] = alpha carbon (attached to EWG, mapped as :1)
                 # match[1] = beta carbon (terminal, mapped as :2)
                 alpha_idx, beta_idx = match[0], match[1]
@@ -115,7 +120,7 @@ class Reaction:
                 seen_pairs.add(pair)
                 
                 # Verify this is truly a C=C double bond between these atoms
-                bond = self.reactant_rdmolH.GetBondBetweenAtoms(alpha_idx, beta_idx)
+                bond = self.reactant_rdmol.GetBondBetweenAtoms(alpha_idx, beta_idx)
                 if bond is None or bond.GetBondTypeAsDouble() < 1.9:
                     continue
                 
@@ -155,8 +160,8 @@ class Reaction:
         if self.alpha_idx is None or self.beta_idx is None:
             self.find_michael_acceptor_atoms()
             if not self.sites:
-                raise ValueError(
-                    f"No Michael acceptor pattern detected in: {self.reactant_smiles}\n"
+                raise NotImplementedError(
+                    f"Acceptor pattern not detected in: {self.reactant_smiles}\n"
                     f"Supported EWGs: {list(self.EWG_SMARTS.keys())}\n"
                     f"You can manually specify alpha_idx and beta_idx to override."
                 )
@@ -173,7 +178,7 @@ class Reaction:
                 print(f"  Using user-specified α-C idx={self.alpha_idx}, β-C idx={self.beta_idx}")
         
         # ── Step 3: Validate the Cα=Cβ bond ──────────────────────────────────────
-        bond = self.reactant_rdmolH.GetBondBetweenAtoms(self.alpha_idx, self.beta_idx)
+        bond = self.reactant_rdmol.GetBondBetweenAtoms(self.alpha_idx, self.beta_idx)
         if bond is None:
             raise ValueError(f"No bond between atom {self.alpha_idx} and {self.beta_idx}")
         if bond.GetBondTypeAsDouble() < 1.9:
@@ -183,7 +188,7 @@ class Reaction:
             )
         
         # ── Step 4: Modify molecule — build carbanion ─────────────────────────────
-        edit_mol = Chem.RWMol(self.reactant_rdmolH)
+        edit_mol = Chem.RWMol(self.reactant_rdmol)
         
         # 4a. Convert Cα=Cβ double bond → single bond
         edit_mol.RemoveBond(self.alpha_idx, self.beta_idx)
@@ -242,8 +247,9 @@ class Reaction:
         self.carbanion_smiles = Chem.MolToSmiles(combined)
         self.carbanion_charge = sum(atom.GetFormalCharge() for atom in combined.GetAtoms())
         
-        if self.carbanion_charge != -1:
-            raise ValueError(f"Constructed carbanion has unexpected charge: {self.carbanion_charge}")
+        # The charge of the carbanion intermediate depends on the charge of the reactant molecule
+        if self.carbanion_charge - self.reactant_charge != -1:
+            raise ValueError(f"Unexpected charge: reactant: {self.reactant_charge} carbanion: {self.carbanion_charge}")
 
         # ── Step 7: Product SMILES ────────────────────────────────────────────────────
         alpha_atom = None
@@ -255,12 +261,14 @@ class Reaction:
         assert alpha_atom is not None, "cannot identify negatively charged alpha carbon"
 
         alpha_atom.SetFormalCharge(0)
-        # Recalculate implicit valency (this "adds" the H)
-        alpha_atom.UpdatePropertyCache()
+        alpha_atom.UpdatePropertyCache() # Recalculate implicit valency (this "adds" the H)
+        
         combined = Chem.AddHs(combined)
         Chem.SanitizeMol(combined)
+
         self.product_rdmol = combined
         self.product_smiles = Chem.MolToSmiles(combined)
+        self.product_charge : int = sum(atom.GetFormalCharge() for atom in self.product_rdmol.GetAtoms())
 
         if self.verbose:
             print()

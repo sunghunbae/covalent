@@ -1,4 +1,4 @@
-# docker run -it --rm --gpus all -v .:/home/appuser orb_models:bitnami bash
+# docker run -it --rm --gpus all -v .:/home/appuser aimnet2:nse bash
 
 import ase
 import json
@@ -17,9 +17,9 @@ from aimnet.calculators import AIMNet2Calculator, AIMNet2ASE
 # isayevlab/aimnet2-nse	        aimnet2-nse	    Open-shell chemistry
 
 for model_name in [
-    # "isayevlab/aimnet2-nse",
+    #"isayevlab/aimnet2-nse",
     "isayevlab/aimnet2-wb97m-d3",
-    "isayevlab/aimnet2-2025",
+    #"isayevlab/aimnet2-2025",
     ]:
 
     model_name_alias = f"{model_name.split('/')[-1]}" # e.g. "aimnet2-nse"
@@ -38,9 +38,9 @@ for model_name in [
         dataset_name = dataset.split("/")[-1]
 
         if dataset_name != 'si':
-            outdir = workdir.parent.parent / f"{model_name_alias}_opt/{dataset_name}"
+            outdir = workdir.parent.parent / f"{model_name_alias}_opt_2/{dataset_name}"
         else:
-            outdir = workdir.parent / f"{model_name_alias}_opt"
+            outdir = workdir.parent / f"{model_name_alias}_opt_2"
 
         print(f"Processing dataset: {dataset}")
         print(f"Input directory: {workdir}")
