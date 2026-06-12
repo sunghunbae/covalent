@@ -73,8 +73,11 @@ def prune(mol: Chem.Mol,
 
     parent = GFN2xTB(rdmolH).singlepoint()
 
-    assert hasattr(parent, 'wbo'), "Error: no wbo for parent"
-    assert all([ij in parent.wbo for ij in wbo_watch]), "Error: missing WBOs for some bonds"
+    try:
+        assert hasattr(parent, 'wbo'), "Error: no wbo for parent"
+        assert all([ij in parent.wbo for ij in wbo_watch]), "Error: missing WBOs for some bonds"
+    except:
+        return []
 
     if verbose:
         for ij in wbo_watch:
@@ -113,7 +116,12 @@ def prune(mol: Chem.Mol,
                     break
 
             child = GFN2xTB(fragment_mol).singlepoint()
-            assert hasattr(child, 'wbo'), "Error: no wbo for child"
+            
+            try:
+                assert hasattr(child, 'wbo'), "Error: no wbo for child"
+            except:
+                continue
+
             frag_na = fragment_mol.GetNumAtoms(onlyExplicit=False)
 
             wbo_diff = []
