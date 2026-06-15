@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 for dataset in ['S2', 'S3', 'S4', 'S5']:
-    infile = Path(f"Danilack_et_al_2024/si/{dataset}_struct.csv")
+    infile = Path(f"Danilack2024/si/{dataset}_struct.csv")
     outdir = infile.parent / f"{dataset}_conformers"
     outdir.mkdir(exist_ok=True, parents=True)
     outfile = outdir / "original_rc.smi"

@@ -7,7 +7,7 @@ from pathlib import Path
 
 dataset = 'S5'
 
-infile = Path(f"Danilack_et_al_2024/si/{dataset}.csv")
+infile = Path(f"Danilack2024/si/{dataset}.csv")
 outdir = infile.parent / f"{dataset}"
 outdir.mkdir(parents=True, exist_ok=True)
 outfile = infile.parent / f"{dataset}_struct.csv"

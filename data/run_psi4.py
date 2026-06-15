@@ -13,7 +13,7 @@ import logging
 psi4.set_num_threads(8)
 psi4.set_memory('8 GB')
 
-infile = Path("Danilack_et_al_2024/si/S2.csv")
+infile = Path("Danilack2024/si/S2.csv")
 
 outdir = infile.parent / "psi4_opt/S2"
 outdir.mkdir(parents=True, exist_ok=True)
