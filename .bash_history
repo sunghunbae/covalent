@@ -51,3 +51,12 @@ cd aimnet2-models/
 ls
 python run_aimnet2_models_conformers.py 
 exit
+ls
+cd data/
+ls
+cd ../aimnet2-models/
+ls
+python run_no_opt_single.py 
+ls
+ls
+exit

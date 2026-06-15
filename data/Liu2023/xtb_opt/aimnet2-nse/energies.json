@@ -1,0 +1,428 @@
+{
+    "1": {
+        "E(initial, kcal/mol)": -395460.08607084566
+    },
+    "10": {
+        "E(initial, kcal/mol)": -107272.68022825073
+    },
+    "10_TS": {
+        "E(initial, kcal/mol)": -382206.0478083045
+    },
+    "10_adduct": {
+        "E(initial, kcal/mol)": -382637.71618676995
+    },
+    "10_carbanion": {
+        "E(initial, kcal/mol)": -382263.02564689185
+    },
+    "11": {
+        "E(initial, kcal/mol)": -337535.5076972901
+    },
+    "11_TS": {
+        "E(initial, kcal/mol)": -612467.9695347737
+    },
+    "11_adduct": {
+        "E(initial, kcal/mol)": -612895.2146065067
+    },
+    "11_carbanion": {
+        "E(initial, kcal/mol)": -612524.7823865978
+    },
+    "12": {
+        "E(initial, kcal/mol)": -252368.78990261542
+    },
+    "12_TS": {
+        "E(initial, kcal/mol)": -527296.8996440306
+    },
+    "12_adduct": {
+        "E(initial, kcal/mol)": -527728.9101821186
+    },
+    "12_carbanion": {
+        "E(initial, kcal/mol)": -527359.2266171961
+    },
+    "13": {
+        "E(initial, kcal/mol)": -300374.8087725112
+    },
+    "13_TS": {
+        "E(initial, kcal/mol)": -575312.7541664477
+    },
+    "13_adduct": {
+        "E(initial, kcal/mol)": -575739.2410271805
+    },
+    "13_carbanion": {
+        "E(initial, kcal/mol)": -575367.5333074044
+    },
+    "14": {
+        "E(initial, kcal/mol)": -155287.92424145393
+    },
+    "14_TS": {
+        "E(initial, kcal/mol)": -430218.17578403355
+    },
+    "14_adduct": {
+        "E(initial, kcal/mol)": -430652.0723269231
+    },
+    "14_carbanion": {
+        "E(initial, kcal/mol)": -430271.82615039987
+    },
+    "15": {
+        "E(initial, kcal/mol)": -416997.98955122853
+    },
+    "15_TS": {
+        "E(initial, kcal/mol)": -691934.2024612061
+    },
+    "15_adduct": {
+        "E(initial, kcal/mol)": -692362.7932107341
+    },
+    "15_carbanion": {
+        "E(initial, kcal/mol)": -692003.6983707045
+    },
+    "16": {
+        "E(initial, kcal/mol)": -525802.8455838418
+    },
+    "16H": {
+        "E(initial, kcal/mol)": -526118.7966845224
+    },
+    "16H_TS": {
+        "E(initial, kcal/mol)": -801121.81459329
+    },
+    "16H_adduct": {
+        "E(initial, kcal/mol)": -801478.1229928636
+    },
+    "16H_carbanion": {
+        "E(initial, kcal/mol)": -801178.576178915
+    },
+    "16_TS": {
+        "E(initial, kcal/mol)": -800737.551162939
+    },
+    "16_adduct": {
+        "E(initial, kcal/mol)": -801168.2201984905
+    },
+    "16_carbanion": {
+        "E(initial, kcal/mol)": -800807.1227986603
+    },
+    "17": {
+        "E(initial, kcal/mol)": -416998.41393079836
+    },
+    "17_TS": {
+        "E(initial, kcal/mol)": -691933.245433102
+    },
+    "17_adduct": {
+        "E(initial, kcal/mol)": -692363.4832144289
+    },
+    "17_carbanion": {
+        "E(initial, kcal/mol)": -691999.5647763378
+    },
+    "18": {
+        "E(initial, kcal/mol)": -525803.5137020386
+    },
+    "18H": {
+        "E(initial, kcal/mol)": -526119.428833369
+    },
+    "18H_TS": {
+        "E(initial, kcal/mol)": -801111.5882122333
+    },
+    "18H_adduct": {
+        "E(initial, kcal/mol)": -801498.4564544706
+    },
+    "18H_adduct_1": {
+        "E(initial, kcal/mol)": -801498.456421788
+    },
+    "18H_carbanion": {
+        "E(initial, kcal/mol)": -801176.9891071107
+    },
+    "18_TS": {
+        "E(initial, kcal/mol)": -800737.0396159035
+    },
+    "18_adduct": {
+        "E(initial, kcal/mol)": -801168.5347132097
+    },
+    "18_carbanion": {
+        "E(initial, kcal/mol)": -800807.2307035053
+    },
+    "19": {
+        "E(initial, kcal/mol)": -277952.3206945912
+    },
+    "19_TS": {
+        "E(initial, kcal/mol)": -552888.6199360924
+    },
+    "19_adduct": {
+        "E(initial, kcal/mol)": -553320.6923135646
+    },
+    "19_carbanion": {
+        "E(initial, kcal/mol)": -552937.921262887
+    },
+    "1_TS": {
+        "E(initial, kcal/mol)": -670396.93634722
+    },
+    "1_adduct_anti": {
+        "E(initial, kcal/mol)": -670816.49553005
+    },
+    "1_adduct_syn": {
+        "E(initial, kcal/mol)": -670815.4897266339
+    },
+    "1_carbanion": {
+        "E(initial, kcal/mol)": -670475.9756101866
+    },
+    "2": {
+        "E(initial, kcal/mol)": -358312.237088795
+    },
+    "20": {
+        "E(initial, kcal/mol)": -179967.94886006706
+    },
+    "20_TS": {
+        "E(initial, kcal/mol)": -454900.0027652779
+    },
+    "20_adduct": {
+        "E(initial, kcal/mol)": -455331.79199998075
+    },
+    "20_carbanion": {
+        "E(initial, kcal/mol)": -454955.4773514259
+    },
+    "21": {
+        "E(initial, kcal/mol)": -391604.8697380488
+    },
+    "21_TS": {
+        "E(initial, kcal/mol)": -666534.0179757352
+    },
+    "21_adduct": {
+        "E(initial, kcal/mol)": -666970.42110012
+    },
+    "21_carbanion": {
+        "E(initial, kcal/mol)": -666595.9684918032
+    },
+    "22": {
+        "E(initial, kcal/mol)": -325060.36449008534
+    },
+    "22_TS": {
+        "E(initial, kcal/mol)": -599993.684325921
+    },
+    "22_adduct": {
+        "E(initial, kcal/mol)": -600424.019143849
+    },
+    "22_carbanion": {
+        "E(initial, kcal/mol)": -600050.35998973
+    },
+    "23": {
+        "E(initial, kcal/mol)": -396971.49608703016
+    },
+    "23_TS": {
+        "E(initial, kcal/mol)": -671902.9284430085
+    },
+    "23_adduct": {
+        "E(initial, kcal/mol)": -672335.6324172289
+    },
+    "23_carbanion": {
+        "E(initial, kcal/mol)": -671962.8793433688
+    },
+    "24": {
+        "E(initial, kcal/mol)": -325049.35524035036
+    },
+    "24_TS": {
+        "E(initial, kcal/mol)": -599987.7618542606
+    },
+    "24_adduct": {
+        "E(initial, kcal/mol)": -600414.3594945644
+    },
+    "24_carbanion": {
+        "E(initial, kcal/mol)": -600043.3156274185
+    },
+    "25": {
+        "E(initial, kcal/mol)": -372285.2152107225
+    },
+    "25_TS": {
+        "E(initial, kcal/mol)": -647223.1355028101
+    },
+    "25_adduct": {
+        "E(initial, kcal/mol)": -647650.013011934
+    },
+    "25_carbanion": {
+        "E(initial, kcal/mol)": -647276.8778045381
+    },
+    "26": {
+        "E(initial, kcal/mol)": -300499.43777672073
+    },
+    "26_TS": {
+        "E(initial, kcal/mol)": -575431.5030548127
+    },
+    "26_adduct": {
+        "E(initial, kcal/mol)": -575862.7029060074
+    },
+    "26_carbanion": {
+        "E(initial, kcal/mol)": -575485.5563280472
+    },
+    "27": {
+        "E(initial, kcal/mol)": -288771.30096916255
+    },
+    "27H": {
+        "E(initial, kcal/mol)": -289108.08022697835
+    },
+    "27H_TS": {
+        "E(initial, kcal/mol)": -564134.9856915728
+    },
+    "27H_adduct": {
+        "E(initial, kcal/mol)": -564425.9816175014
+    },
+    "27H_carbanion": {
+        "E(initial, kcal/mol)": -564089.9980902488
+    },
+    "27_TS": {
+        "E(initial, kcal/mol)": -563702.9529379867
+    },
+    "27_adduct": {
+        "E(initial, kcal/mol)": -564136.2219548698
+    },
+    "27_carbanion": {
+        "E(initial, kcal/mol)": -563752.9897779544
+    },
+    "28": {
+        "E(initial, kcal/mol)": -313793.1848812047
+    },
+    "28_TS": {
+        "E(initial, kcal/mol)": -588753.859504986
+    },
+    "28_adduct": {
+        "E(initial, kcal/mol)": -589105.52437226
+    },
+    "28_carbanion": {
+        "E(initial, kcal/mol)": -588786.8505413893
+    },
+    "29": {
+        "E(initial, kcal/mol)": -325063.0270950315
+    },
+    "29_TS": {
+        "E(initial, kcal/mol)": -600003.5540790404
+    },
+    "29_adduct_anti": {
+        "E(initial, kcal/mol)": -600425.7161949512
+    },
+    "29_adduct_syn": {
+        "E(initial, kcal/mol)": -600425.4397842239
+    },
+    "29_carbanion": {
+        "E(initial, kcal/mol)": -600058.4169037635
+    },
+    "2_TS": {
+        "E(initial, kcal/mol)": -633229.4846500992
+    },
+    "2_adduct_anti": {
+        "E(initial, kcal/mol)": -633665.2494539764
+    },
+    "2_adduct_syn": {
+        "E(initial, kcal/mol)": -633667.7206233714
+    },
+    "2_carbanion": {
+        "E(initial, kcal/mol)": -633324.3596130126
+    },
+    "3": {
+        "E(initial, kcal/mol)": -250364.218923835
+    },
+    "30": {
+        "E(initial, kcal/mol)": -441686.88549962954
+    },
+    "30_TS": {
+        "E(initial, kcal/mol)": -716625.6751212018
+    },
+    "30_adduct_anti": {
+        "E(initial, kcal/mol)": -717049.2277320214
+    },
+    "30_adduct_syn": {
+        "E(initial, kcal/mol)": -717049.971028432
+    },
+    "30_carbanion": {
+        "E(initial, kcal/mol)": -716685.1742547107
+    },
+    "3_TS": {
+        "E(initial, kcal/mol)": -525271.3376438037
+    },
+    "3_adduct": {
+        "E(initial, kcal/mol)": -525723.2539200562
+    },
+    "3_carbanion": {
+        "E(initial, kcal/mol)": -525380.1800783698
+    },
+    "4": {
+        "E(initial, kcal/mol)": -213215.70635076283
+    },
+    "4_TS": {
+        "E(initial, kcal/mol)": -488147.08594314044
+    },
+    "4_adduct": {
+        "E(initial, kcal/mol)": -488573.628881273
+    },
+    "4_carbanion": {
+        "E(initial, kcal/mol)": -488230.4571051497
+    },
+    "5": {
+        "E(initial, kcal/mol)": -407530.8432133643
+    },
+    "5_TS": {
+        "E(initial, kcal/mol)": -682477.4280290412
+    },
+    "5_adduct_anti": {
+        "E(initial, kcal/mol)": -682889.0362987425
+    },
+    "5_adduct_syn": {
+        "E(initial, kcal/mol)": -682887.9705489614
+    },
+    "5_carbanion": {
+        "E(initial, kcal/mol)": -682543.516411516
+    },
+    "6": {
+        "E(initial, kcal/mol)": -403733.5534040034
+    },
+    "6_TS": {
+        "E(initial, kcal/mol)": -678677.0830469647
+    },
+    "6_adduct_anti": {
+        "E(initial, kcal/mol)": -679094.3884490465
+    },
+    "6_adduct_syn": {
+        "E(initial, kcal/mol)": -679091.0422005653
+    },
+    "6_carbanion": {
+        "E(initial, kcal/mol)": -678738.3539083089
+    },
+    "7": {
+        "E(initial, kcal/mol)": -393655.23860705446
+    },
+    "7_TS": {
+        "E(initial, kcal/mol)": -668600.1430253277
+    },
+    "7_adduct_anti": {
+        "E(initial, kcal/mol)": -669016.0739479954
+    },
+    "7_adduct_syn": {
+        "E(initial, kcal/mol)": -669012.7073580878
+    },
+    "7_carbanion": {
+        "E(initial, kcal/mol)": -668650.9918861861
+    },
+    "8": {
+        "E(initial, kcal/mol)": -145198.6825346394
+    },
+    "8_TS": {
+        "E(initial, kcal/mol)": -420131.0858885907
+    },
+    "8_adduct": {
+        "E(initial, kcal/mol)": -420564.0030312959
+    },
+    "8_carbanion": {
+        "E(initial, kcal/mol)": -420191.6373047418
+    },
+    "9": {
+        "E(initial, kcal/mol)": -192439.74903848252
+    },
+    "9_TS": {
+        "E(initial, kcal/mol)": -467369.72558716824
+    },
+    "9_adduct": {
+        "E(initial, kcal/mol)": -467804.20438255096
+    },
+    "9_carbanion": {
+        "E(initial, kcal/mol)": -467429.0739158323
+    },
+    "MeSH": {
+        "E(initial, kcal/mol)": -275341.62227061053
+    },
+    "MeS_": {
+        "E(initial, kcal/mol)": -274891.37580038176
+    }
+}
