@@ -142,13 +142,13 @@ class Geometry():
         self.psi4_mol = psi4.geometry(self.mol_str)
 
 
-    def xtb_optimize(self) -> None:
+    def xtb_optimize(self, **kwargs) -> None:
         """
         Pre-optimization with xtb (GFN2-xTB) to get a reasonable starting geometry for Psi4 DFT optimization.
         This can help avoid convergence issues in the subsequent DFT optimization step.
         """
         xtb = GFN2xTB(self.rdmol)
-        xtb_opt_result = xtb.optimize() # returns a NameSpace with .geometry (RDKit Mol)
+        xtb_opt_result = xtb.optimize(**kwargs) # returns a NameSpace with .geometry (RDKit Mol)
         self.rdmol = xtb_opt_result.geometry
         self.update_coords()
 
