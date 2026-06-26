@@ -1,9 +1,58 @@
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
+from dataclasses import dataclass
 from typing import Self
+
 import covalent.utils
 
+
+@dataclass
+class Molecule:
+    rdmol: Chem.Mol | None = None
+    smiles: str = ""
+    charge: int = 0
+    alpha_idx: int | None = None
+    beta_idx: int | None = None
+    S_idx: int | None = None
+    map_Ca: int | None = None
+    map_Cb: int | None = None
+    map_S: int | None = None
+
+    def __post_init__(self):
+        if self.rdmol:
+            self.rdmol = Chem.AddHs(self.rdmol)
+            # If AddHs() called on a molecule that already has all its hydrogens explicitly added
+            # RDKit simply does nothing
+            self.smiles = Chem.MolToSmiles(self.rdmol)
+            self.charge = sum(a.GetFormalCharge() for a in self.rdmol.GetAtoms())
+
+
+    def set_mapping(self,
+                    alpha: int | None = None,
+                    beta: int | None = None,
+                    S: int | None = None) -> None:
+        if isinstance(alpha, int) and isinstance(self.map_Ca, int):
+            self.alpha_idx = alpha
+            self.rdmol.GetAtomWithIdx(alpha).SetAtomMapNum(self.map_Ca)
+        if isinstance(beta, int) and isinstance(self.map_Cb, int):
+            self.beta_idx = beta
+            self.rdmol.GetAtomWithIdx(beta).SetAtomMapNum(self.map_Cb)
+        if isinstance(S, int) and isinstance(self.map_S, int):
+            self.S_idx = S
+            self.rdmol.GetAtomWithIdx(S).SetAtomMapNum(self.map_S)
+        self.smiles = Chem.MolToSmiles(self.rdmol)
+        
+
+    def get_mapping(self) -> None:
+        if self.rdmol and isinstance(self.map_Ca, int):
+            self.alpha_idx = next(a.GetIdx() for a in self.rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Ca)
+        if self.rdmol and isinstance(self.map_Cb, int):
+            self.beta_idx = next(a.GetIdx() for a in self.rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Cb)
+        if self.rdmol and isinstance(self.map_S, int):
+            self.S_idx = next(a.GetIdx() for a in self.rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_S)
+        
+    
 
 class Reaction:
     """
@@ -64,20 +113,18 @@ class Reaction:
             beta_idx        : Override auto-detected beta carbon atom index
             verbose         : Print detection details
         """
-        # Reactant
-        self.reactant_rdmol : Chem.Mol | None = None
-        self.reactant_smiles : str = ""
-        self.reactant_charge : int = 0
-
         if isinstance(reactant, str):
             reactant = Chem.MolFromSmiles(reactant)
 
         if isinstance(reactant, Chem.Mol):
             reactant = Chem.AddHs(reactant)
-            self.reactant_smiles = Chem.MolToSmiles(reactant)
-            self.reactant_rdmol = Chem.RWMol(reactant)
-            self.reactant_charge = sum(a.GetFormalCharge() for a in self.reactant_rdmol.GetAtoms())
-        
+            self.reactant = Molecule(Chem.RWMol(reactant), 
+                                     map_Ca=map_Ca, 
+                                     map_Cb=map_Cb, 
+                                     map_S=map_S)
+        else:
+            self.reactant = Molecule(map_Ca=map_Ca, map_Cb=map_Cb, map_S=map_S)
+
         self.thiol_smiles : str = thiol_smiles
         self.ewg: str = ""
         self.sites : list[tuple[int, int, str]] = []
@@ -88,29 +135,19 @@ class Reaction:
         self.map_S  : int = map_S
         self.verbose : bool = verbose
 
-        self.carbanion_rdmol : Chem.Mol | None = None
-        self.carbanion_smiles : str = ""
-        self.carbanion_charge: int = 0
-        self.carbanion_alpha_idx : int = -1
-        self.carbanion_beta_idx : int = -1
-        self.carbanion_S_idx : int = -1
+        self.carbanion = Molecule(map_Ca=map_Ca, map_Cb=map_Cb, map_S=map_S)
+        self.product = Molecule(map_Ca=map_Ca, map_Cb=map_Cb, map_S=map_S)
 
-        self.product_rdmol : Chem.Mol | None = None
-        self.product_smiles : str = ""
-        self.product_charge: int = 0
-        self.product_alpha_idx : int = -1
-        self.product_beta_idx : int = -1
-        self.product_S_idx : int = -1
         
-        if self.reactant_smiles and self.reactant_rdmol :
+        if self.reactant.smiles and self.reactant.rdmol :
             self._build_intermediate_and_product()
 
 
     def serialize(self) -> str:
         serialized = covalent.utils.serialize({
-            'reactant': Chem.MolToMolBlock(self.reactant_rdmol),
-            'carbanion': Chem.MolToMolBlock(self.carbanion_rdmol),
-            'product': Chem.MolToMolBlock(self.product_rdmol),
+            'reactant': Chem.MolToMolBlock(self.reactant.rdmol),
+            'carbanion': Chem.MolToMolBlock(self.carbanion.rdmol),
+            'product': Chem.MolToMolBlock(self.product.rdmol),
             'thiol_smiles': self.thiol_smiles,
             'ewg': self.ewg,
             'sites': self.sites,
@@ -134,28 +171,54 @@ class Reaction:
         self.map_Cb = int(data['map_Cb'])
         self.map_S = int(data['map_S'])
         
-        self.reactant_rdmol = Chem.MolFromMolBlock(data['reactant'], sanitize=False, removeHs=False)
-        self.reactant_smiles = Chem.MolToSmiles(self.reactant_rdmol)
-        self.reactant_charge = sum(a.GetFormalCharge() for a in self.reactant_rdmol.GetAtoms())
-        
-        self.carbanion_rdmol = Chem.MolFromMolBlock(data['carbanion'], sanitize=False, removeHs=False)
-        self.carbanion_smiles = Chem.MolToSmiles(self.carbanion_rdmol)
-        self.carbanion_charge = sum(a.GetFormalCharge() for a in self.carbanion_rdmol.GetAtoms())
-        self.carbanion_beta_idx = next(a.GetIdx() for a in self.carbanion_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Cb)
-        self.carbanion_alpha_idx = next(a.GetIdx() for a in self.carbanion_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Ca)
-        self.carbanion_S_idx = next(a.GetIdx() for a in self.carbanion_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_S)
+        self.reactant = Molecule(
+            Chem.MolFromMolBlock(data['reactant'], sanitize=False, removeHs=False),
+            map_Ca = self.map_Ca, 
+            map_Cb = self.map_Cb,
+            map_S = self.map_S,
+        )
+        # self.reactant.get_mapping()
 
-        self.product_rdmol = Chem.MolFromMolBlock(data['product'], sanitize=False, removeHs=False)
-        self.product_smiles = Chem.MolToSmiles(self.product_rdmol)
-        self.product_charge = sum(a.GetFormalCharge() for a in self.product_rdmol.GetAtoms())
-        self.product_beta_idx = next(a.GetIdx() for a in self.product_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Cb)
-        self.product_alpha_idx = next(a.GetIdx() for a in self.product_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Ca)
-        self.product_S_idx = next(a.GetIdx() for a in self.product_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_S)
+        self.carbanion = Molecule(
+            Chem.MolFromMolBlock(data['carbanion'], sanitize=False, removeHs=False),
+            map_Ca = self.map_Ca, 
+            map_Cb = self.map_Cb,
+            map_S = self.map_S,
+        )
+        self.carbanion.get_mapping()
+
+        self.product = Molecule(
+            Chem.MolFromMolBlock(data['product'], sanitize=False, removeHs=False),
+            map_Ca = self.map_Ca, 
+            map_Cb = self.map_Cb,
+            map_S = self.map_S,
+        )
+        self.product.get_mapping()
+
+
+
+        # self.reactant_rdmol = Chem.MolFromMolBlock(data['reactant'], sanitize=False, removeHs=False)
+        # self.reactant_smiles = Chem.MolToSmiles(self.reactant_rdmol)
+        # self.reactant_charge = sum(a.GetFormalCharge() for a in self.reactant_rdmol.GetAtoms())
+
+        # self.carbanion_rdmol = Chem.MolFromMolBlock(data['carbanion'], sanitize=False, removeHs=False)
+        # self.carbanion_smiles = Chem.MolToSmiles(self.carbanion_rdmol)
+        # self.carbanion_charge = sum(a.GetFormalCharge() for a in self.carbanion_rdmol.GetAtoms())
+        # self.carbanion_beta_idx = next(a.GetIdx() for a in self.carbanion_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Cb)
+        # self.carbanion_alpha_idx = next(a.GetIdx() for a in self.carbanion_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Ca)
+        # self.carbanion_S_idx = next(a.GetIdx() for a in self.carbanion_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_S)
+
+        # self.product_rdmol = Chem.MolFromMolBlock(data['product'], sanitize=False, removeHs=False)
+        # self.product_smiles = Chem.MolToSmiles(self.product_rdmol)
+        # self.product_charge = sum(a.GetFormalCharge() for a in self.product_rdmol.GetAtoms())
+        # self.product_beta_idx = next(a.GetIdx() for a in self.product_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Cb)
+        # self.product_alpha_idx = next(a.GetIdx() for a in self.product_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Ca)
+        # self.product_S_idx = next(a.GetIdx() for a in self.product_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_S)
 
         return self
 
 
-    def _find_michael_acceptor_atoms(self) -> list[tuple]:
+    def _find_michael_acceptor_patterns(self) -> list[tuple]:
         """
         Identify all (alpha_idx, beta_idx, ewg) tuples in the molecule.
         
@@ -174,7 +237,7 @@ class Reaction:
             if pattern is None:
                 continue
             
-            for match in self.reactant_rdmol.GetSubstructMatches(pattern):
+            for match in self.reactant.rdmol.GetSubstructMatches(pattern):
                 # match[0] = alpha carbon (attached to EWG, mapped as :1)
                 # match[1] = beta carbon (terminal, mapped as :2)
                 alpha_idx, beta_idx = match[0], match[1]
@@ -185,7 +248,7 @@ class Reaction:
                 seen_pairs.add(pair)
                 
                 # Verify this is truly a C=C double bond between these atoms
-                bond = self.reactant_rdmol.GetBondBetweenAtoms(alpha_idx, beta_idx)
+                bond = self.reactant.rdmol.GetBondBetweenAtoms(alpha_idx, beta_idx)
                 if bond is None or bond.GetBondTypeAsDouble() < 1.9:
                     continue
                 
@@ -221,10 +284,10 @@ class Reaction:
         """
         # ── Step 2: Detect Michael acceptor site(s) ───────────────────────────────
         if self.alpha_idx is None or self.beta_idx is None:
-            self.sites = self._find_michael_acceptor_atoms()
+            self.sites = self._find_michael_acceptor_patterns()
             if not self.sites:
                 raise NotImplementedError(
-                    f"Acceptor pattern not detected in: {self.reactant_smiles}\n"
+                    f"Acceptor pattern not detected in: {self.reactant.smiles}\n"
                     f"Supported EWGs: {list(self.EWG_SMARTS.keys())}\n"
                     f"You can manually specify alpha_idx and beta_idx to override."
                 )
@@ -242,7 +305,7 @@ class Reaction:
                 print(f"  Using user-specified α-C idx={self.alpha_idx}, β-C idx={self.beta_idx}")
         
         # ── Step 3: Validate the Cα=Cβ bond ──────────────────────────────────────
-        bond = self.reactant_rdmol.GetBondBetweenAtoms(self.alpha_idx, self.beta_idx)
+        bond = self.reactant.rdmol.GetBondBetweenAtoms(self.alpha_idx, self.beta_idx)
         if bond is None:
             raise ValueError(f"No bond between atom {self.alpha_idx} and {self.beta_idx}")
         if bond.GetBondTypeAsDouble() < 1.9:
@@ -251,17 +314,11 @@ class Reaction:
                 f"(bond order = {bond.GetBondTypeAsDouble():.1f})"
             )
         
-        
+        self.reactant.set_mapping(alpha=self.alpha_idx, beta=self.beta_idx)
+
         # ── Step 4: Modify molecule — build carbanion ─────────────────────────────
-        self.reactant_rdmol.GetAtomWithIdx(self.beta_idx).SetAtomMapNum(self.map_Cb)
-        self.reactant_rdmol.GetAtomWithIdx(self.alpha_idx).SetAtomMapNum(self.map_Ca)
-        self.reactant_smiles = Chem.MolToSmiles(self.reactant_rdmol)
+        edit_mol = Chem.RWMol(self.reactant.rdmol)
 
-        edit_mol = Chem.RWMol(self.reactant_rdmol)
-
-        # edit_mol.GetAtomWithIdx(self.beta_idx).SetAtomMapNum(self.map_Cb)
-        # edit_mol.GetAtomWithIdx(self.alpha_idx).SetAtomMapNum(self.map_Ca)
-        
         # 4a. Convert Cα=Cβ double bond → single bond
         edit_mol.RemoveBond(self.alpha_idx, self.beta_idx)
         edit_mol.AddBond(self.alpha_idx, self.beta_idx, Chem.BondType.SINGLE)
@@ -296,13 +353,12 @@ class Reaction:
         combined = Chem.RWMol(Chem.CombineMols(edit_mol, thiol_mol))
         
         # 4g. Bond β-carbon to sulfur
-        # s_idx_combined = edit_mol.GetNumAtoms() + s_atom_idx_in_thiol
-        s_idx_combined = next(a.GetIdx() for a in combined.GetAtoms() if a.GetAtomMapNum() == self.map_S)
+        s_idx = next(a.GetIdx() for a in combined.GetAtoms() if a.GetAtomMapNum() == self.map_S)
         # Sulfur atom index in the combined molecule
-        combined.AddBond(self.beta_idx, s_idx_combined, Chem.BondType.SINGLE)
+        combined.AddBond(self.beta_idx, s_idx, Chem.BondType.SINGLE)
         
         # ── Step 5: Remove one H from sulfur (it was SH, now S-) ──────────────────
-        s_atom = combined.GetAtomWithIdx(s_idx_combined)
+        s_atom = combined.GetAtomWithIdx(s_idx)
         sh_to_remove = None
         for neighbor in s_atom.GetNeighbors():
             if neighbor.GetAtomicNum() == 1:
@@ -323,52 +379,45 @@ class Reaction:
         except Exception as e:
             raise ValueError(f"MMFF optimization failed after carbanion construction: {e}")
         
-        self.carbanion_rdmol = Chem.Mol(combined)
-        self.carbanion_smiles = Chem.MolToSmiles(combined)
-        self.carbanion_charge = sum(a.GetFormalCharge() for a in combined.GetAtoms())
+        self.carbanion = Molecule(rdmol = Chem.Mol(combined),
+                                  map_Ca = self.map_Ca,
+                                  map_Cb = self.map_Cb,
+                                  map_S = self.map_S)
+        self.carbanion.get_mapping()
 
-        # Find alpha and beta indices in the carbanion via map numbers
-        self.carbanion_beta_idx = next(a.GetIdx() for a in self.carbanion_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Cb)
-        self.carbanion_alpha_idx = next(a.GetIdx() for a in self.carbanion_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Ca)
-        self.carbanion_S_idx = next(a.GetIdx() for a in self.carbanion_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_S)
-        
         # The charge of the carbanion intermediate depends on the charge of the reactant molecule
-        if (self.carbanion_charge - self.reactant_charge) != -1:
-            raise ValueError(f"Unexpected charge: reactant: {self.reactant_charge} carbanion: {self.carbanion_charge}")
-
-        # ── Step 7: Product SMILES ────────────────────────────────────────────────────
-        alpha_atom = None
-        for atom in combined.GetAtoms():
-            if atom.GetFormalCharge() == -1:
-                alpha_atom = atom
-                break
+        if (self.carbanion.charge - self.reactant.charge) != -1:
+            raise ValueError(f"Unexpected charge: reactant: {self.reactant.charge} carbanion: {self.carbanion.charge}")
+        
+        alpha_atom = combined.GetAtomWithIdx(self.carbanion.alpha_idx)
         
         assert alpha_atom is not None, "cannot identify negatively charged alpha carbon"
+        assert alpha_atom.GetFormalCharge() == -1, "Cα atom is not negatively charged"
 
+        # ── Step 7: Product SMILES ────────────────────────────────────────────────────
+        
         alpha_atom.SetFormalCharge(0)
         alpha_atom.UpdatePropertyCache() # Recalculate implicit valency (this "adds" the H)
         combined = Chem.AddHs(combined)
         Chem.SanitizeMol(combined)
 
-        self.product_rdmol = Chem.Mol(combined)
-        self.product_smiles = Chem.MolToSmiles(combined)
-        self.product_charge = sum(a.GetFormalCharge() for a in combined.GetAtoms())
-        # Find alpha and beta indices in the carbanion via map numbers
-        self.product_beta_idx = next(a.GetIdx() for a in self.product_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Cb)
-        self.product_alpha_idx = next(a.GetIdx() for a in self.product_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_Ca)
-        self.product_S_idx = next(a.GetIdx() for a in self.product_rdmol.GetAtoms() if a.GetAtomMapNum() == self.map_S)
+        self.product = Molecule(rdmol = Chem.Mol(combined), 
+                                map_Ca = self.map_Ca,
+                                map_Cb = self.map_Cb,
+                                map_S = self.map_S)
+        self.product.get_mapping()
         
         if self.verbose:
             print()
-            print(f"  Reactant                 : {self.reactant_smiles}")
-            print(f"    charge                 : {self.reactant_charge}")
+            print(f"  Reactant                 : {self.reactant.smiles}")
+            print(f"    charge                 : {self.reactant.charge}")
             print(f"    # of reaction sites    : {len(self.sites)}")
             print(f"    EWG                    : {self.ewg}")
             print(f"    Cα, Cβ indices         : {self.alpha_idx},{self.beta_idx}")
             print(f"  Thiol                    : {self.thiol_smiles}")
-            print(f"  α-carbanion intermediate : {self.carbanion_smiles}")
-            print(f"    charge                 : {self.carbanion_charge}")
-            print(f"    Cα, Cβ, S indices      : {self.carbanion_alpha_idx},{self.carbanion_beta_idx},{self.carbanion_S_idx}")
-            print(f"  Product                  : {self.product_smiles}")
-            print(f"    charge                 : {self.product_charge}")
-            print(f"    Cα, Cβ, S indices      : {self.product_alpha_idx},{self.product_beta_idx},{self.product_S_idx}")
+            print(f"  α-carbanion intermediate : {self.carbanion.smiles}")
+            print(f"    charge                 : {self.carbanion.charge}")
+            print(f"    Cα, Cβ, S indices      : {self.carbanion.alpha_idx},{self.carbanion.beta_idx},{self.carbanion.S_idx}")
+            print(f"  Product                  : {self.product.smiles}")
+            print(f"    charge                 : {self.product.charge}")
+            print(f"    Cα, Cβ, S indices      : {self.product.alpha_idx},{self.product.beta_idx},{self.product.S_idx}")

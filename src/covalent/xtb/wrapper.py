@@ -40,7 +40,7 @@ class GFN2xTB:
         ncores: int | None = None,
         xtb_exec: str | Path | None = None,
     ):
-        """_summary_
+        """GFN2xTB
 
         Args:
             molecule (Chem.Mol): input molecule in rdkit.Chem.Mol format
@@ -205,6 +205,8 @@ $ cp -r xtb-dist/share      /usr/local/ """
     def to_xyz(self) -> str:
         """Export to XYZ formatted string.
 
+        The order of atoms in the XYZ file follows the order of atoms in the Chem.Mol
+
         Returns:
             str: XYZ formatted string
         """
@@ -214,6 +216,35 @@ $ cp -r xtb-dist/share      /usr/local/ """
 
         return "\n".join(lines)
 
+    def load_xyz(self, geometry_input_path: Path) -> Chem.Mol:
+        """Return a copy of self.rdmol with coordinates updated by a given XYZ file
+
+        The given XYZ file should be the identical molecule as self.rdmol.
+
+        Args:
+            geometry_input_path (Path): pathlib.Path to the xyz
+
+        Returns:
+            Chem.Mol: rdkit Chem.Mol object.
+        """
+        rdmol_opt = Chem.Mol(self.rdmol)
+        with open(geometry_input_path, "r") as f:
+            for lineno, line in enumerate(f):
+                if lineno == 0:
+                    assert int(line.strip()) == self.natoms, "number of atoms does not match"
+                    continue
+                elif lineno == 1:  # comment or title
+                    continue
+                (symbol, x, y, z) = line.strip().split()
+                x, y, z = float(x), float(y), float(z)
+                atom = rdmol_opt.GetAtomWithIdx(lineno - 2)
+                assert symbol == atom.GetSymbol(), f"symbol of atom does not match at line {lineno+1}"
+                rdmol_opt.GetConformer().SetAtomPosition(
+                    atom.GetIdx(), Point3D(x, y, z)
+                )
+
+        return rdmol_opt
+    
     def to_turbomole_coord(self, bohr: bool = False) -> str:
         """Returns TURBOMOLE coord file formatted strings.
 
@@ -249,33 +280,6 @@ $ cp -r xtb-dist/share      /usr/local/ """
 
         return "\n".join(lines)
 
-    def load_xyz(self, geometry_input_path: Path) -> Chem.Mol:
-        """Load geometry.
-
-        Args:
-            geometry_input_path (Path): pathlib.Path to the xyz
-
-        Returns:
-            Chem.Mol: rdkit Chem.Mol object.
-        """
-        rdmol_opt = Chem.Mol(self.rdmol)
-        with open(geometry_input_path, "r") as f:
-            for lineno, line in enumerate(f):
-                if lineno == 0:
-                    assert int(line.strip()) == self.natoms
-                    continue
-                elif lineno == 1:  # comment or title
-                    continue
-                (symbol, x, y, z) = line.strip().split()
-                x, y, z = float(x), float(y), float(z)
-                atom = rdmol_opt.GetAtomWithIdx(lineno - 2)
-                assert symbol == atom.GetSymbol()
-                rdmol_opt.GetConformer().SetAtomPosition(
-                    atom.GetIdx(), Point3D(x, y, z)
-                )
-
-        return rdmol_opt
-
     def load_wbo(self, wbo_path: Path) -> dict[tuple[int, int], float]:
         """Load Wiberg bond order.
 
@@ -305,9 +309,7 @@ $ cp -r xtb-dist/share      /usr/local/ """
 
             return Wiberg_bond_orders
 
-    def singlepoint(
-        self, water: str | None = None, verbose: bool = False
-    ) -> SimpleNamespace:
+    def singlepoint(self, water: str | None = None, verbose: bool = False) -> SimpleNamespace:
         """Calculate single point energy.
 
         Total energy from xtb output in atomic units (Eh, hartree) is converted to kcal/mol.
@@ -445,9 +447,7 @@ $ cp -r xtb-dist/share      /usr/local/ """
         # something went wrong if it reaches here
         return SimpleNamespace()
 
-    def optimize(
-        self, water: str | None = None, verbose: bool = False
-    ) -> SimpleNamespace:
+    def optimize(self, water: str | None = None, verbose: bool = False) -> SimpleNamespace:
         """Optimize geometry.
 
         Options:
@@ -626,9 +626,7 @@ $ cp -r xtb-dist/share      /usr/local/ """
         return grid_points, (nx, ny, nz), origin, grid_vectors
 
     @staticmethod
-    def interpolate_esp_to_grid(
-        surface_points, grid_points, method="nearest", max_distance=2.0
-    ):
+    def interpolate_esp_to_grid(surface_points, grid_points, method="nearest", max_distance=2.0):
         """
         Interpolate surface ESP values to regular grid using nearest neighbor.
         Points far from surface are set to zero.
@@ -708,9 +706,7 @@ $ cp -r xtb-dist/share      /usr/local/ """
 
         return "\n".join(cube)
 
-    def esp_surface_points(
-        self, water: str | None = None, verbose: bool = False
-    ) -> str:
+    def esp_surface_points(self, water: str | None = None, verbose: bool = False) -> str:
         """Calculate electrostatic potential surface points data.
 
         Example:

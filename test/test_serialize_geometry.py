@@ -4,6 +4,9 @@ from covalent import Geometry
 g = Geometry(smiles="C=CC(=O)N", charge=0)
 serialized = g.serialize()
 
+print("Serialized string size=", len(serialized))
+print("Serialized string:", serialized)
+
 h = Geometry()
 h.deserialize(serialized)
 

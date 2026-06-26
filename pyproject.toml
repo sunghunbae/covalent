@@ -12,13 +12,10 @@ platforms = ["linux-64"]
 covalent = { path = ".", editable = true }
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/covalent"] # Ensure your package folder is tracked
+packages = ["src/covalent"]
 
 [tool.hatch.build]
-# Include all JSON files in the data directory
-include = [
-  "src/covalent/methylthiol/*.xyz",
-]
+include = [ "src/covalent/methylthiol/*.xyz", ]
 
 [tool.pixi.tasks]
 

@@ -363,7 +363,7 @@ packages:
 - pypi: ./
   name: covalent
   version: 0.1.0
-  sha256: 7d6c3d0e2c5d0b0052c4ed4f71950d24413fc5756b4df66bfac2b37585ad47ab
+  sha256: 727af703c12a4c75b3bf688a6959db2e02684cff00f137095613a1fc483309a0
   requires_python: '>=3.12'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/cpp-argparse-3.2-h84d6215_1.conda
   sha256: 6dc6bdd147afc53c6d2d5196d002d5a39a341639ab457fc198c664c08f33cbb5

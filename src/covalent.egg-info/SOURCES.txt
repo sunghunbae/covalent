@@ -11,6 +11,7 @@ src/covalent/prune.py
 src/covalent/reaction.py
 src/covalent/thermodynamics.py
 src/covalent/transitionstate.py
+src/covalent/utils.py
 src/covalent.egg-info/PKG-INFO
 src/covalent.egg-info/SOURCES.txt
 src/covalent.egg-info/dependency_links.txt

@@ -17,13 +17,5 @@ for name, smiles, thiol in test_cases:
     print(f"\n▶ {name}")
     try:
         rxn = Reaction(smiles, thiol_smiles=thiol, verbose=True)
-        print(f"  Reactant SMILES: {smiles}")
-        print(f"  Thiol SMILES: {thiol}")
-        print(f"  Alpha carbon index: {rxn.alpha_idx}")
-        print(f"  Beta carbon index: {rxn.beta_idx}")
-        print(f"  Carbanion SMILES: {rxn.carbanion_smiles}")
-        print(f"  Product SMILES: {rxn.product_smiles}")
-        print(f"  EWG type: {rxn.ewg_type}")
-        print()
     except ValueError as e:
         print(f"  ✗ Error: {e}")

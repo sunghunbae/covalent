@@ -1,6 +1,7 @@
 import numpy as np
 import psi4
-import json
+
+import covalent.utils
 
 from pathlib import Path
 from psi4.driver.qcdb import vib as qcdb_vib
@@ -228,7 +229,7 @@ class Geometry():
 
 
     def serialize(self) -> str:
-        return json.dumps({
+        return covalent.utils.serialize({
             'smiles': self.smiles,
             'natoms': self.natoms,
             'symbols': self.symbols,
@@ -243,7 +244,7 @@ class Geometry():
     
 
     def deserialize(self, serialized: str) -> None:
-        data = json.loads(serialized)
+        data = covalent.utils.deserialize(serialized)
         self.smiles = data.get('smiles')
         self.natoms = data.get('natoms')
         self.symbols = data.get('symbols')
