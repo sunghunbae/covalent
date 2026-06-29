@@ -2,6 +2,7 @@ README.md
 pyproject.toml
 src/covalent/__init__.py
 src/covalent/carbanion.py
+src/covalent/cli.py
 src/covalent/electrophilicity.py
 src/covalent/fukui.py
 src/covalent/geometry.py
@@ -15,6 +16,7 @@ src/covalent/utils.py
 src/covalent.egg-info/PKG-INFO
 src/covalent.egg-info/SOURCES.txt
 src/covalent.egg-info/dependency_links.txt
+src/covalent.egg-info/entry_points.txt
 src/covalent.egg-info/top_level.txt
 src/covalent/xtb/__init__.py
 src/covalent/xtb/wrapper.py
@@ -25,5 +27,6 @@ test/test_geometry_and_omega.py
 test/test_methyl_thiol.py
 test/test_prune.py
 test/test_reaction.py
-test/test_serialize.py
+test/test_serialize_geometry.py
+test/test_serialize_reaction.py
 test/test_solvation.py

@@ -31,7 +31,8 @@ class Reaction:
     # Ordered from most specific to most general to avoid mis-assignment
 
     EWG_SMARTS = {
-        "vinyl_trifluoromethyl": "[C:1](=[C:2])C(F)(F)F",     # -C=C-CF3
+        "vinyl_trifluoromethyl": "[C:1](=[CX3H2:2])C(F)(F)F",   # -Cb=Ca-CF3
+        "acrylamide_CF3":        "[C:1](=[CX3H1:2]C(F)(F)F)",   # -Ca=Cb-CF3
         "cyanoacrylamide":       "[C:1](=[C:2])C#N",          # -C=C-CN (dual activation)
         "vinyl_sulfone":         "[C:1](=[C:2])S(=O)(=O)",    # -C=C-SO2-
         "vinyl_phosphonate":     "[C:1](=[C:2])P(=O)",        # -C=C-P(O)-
@@ -103,6 +104,7 @@ class Reaction:
         self.product_S_idx : int = -1
         
         if self.reactant_smiles and self.reactant_rdmol :
+            self._find_michael_acceptor_atoms()
             self._build_intermediate_and_product()
 
 
@@ -155,7 +157,7 @@ class Reaction:
         return self
 
 
-    def _find_michael_acceptor_atoms(self) -> list[tuple]:
+    def _find_michael_acceptor_atoms(self) -> None:
         """
         Identify all (alpha_idx, beta_idx, ewg) tuples in the molecule.
         
@@ -168,30 +170,56 @@ class Reaction:
         """
         matches = []
         seen_pairs = set()
-        
-        for ewg_name, smarts in self.EWG_SMARTS.items():
-            pattern = Chem.MolFromSmarts(smarts)
-            if pattern is None:
-                continue
-            
-            for match in self.reactant_rdmol.GetSubstructMatches(pattern):
-                # match[0] = alpha carbon (attached to EWG, mapped as :1)
-                # match[1] = beta carbon (terminal, mapped as :2)
-                alpha_idx, beta_idx = match[0], match[1]
-                
-                pair = (alpha_idx, beta_idx)
-                if pair in seen_pairs:
-                    continue  # already found via a more specific pattern
-                seen_pairs.add(pair)
-                
-                # Verify this is truly a C=C double bond between these atoms
-                bond = self.reactant_rdmol.GetBondBetweenAtoms(alpha_idx, beta_idx)
-                if bond is None or bond.GetBondTypeAsDouble() < 1.9:
+
+        if self.alpha_idx is None or self.beta_idx is None:
+            for ewg_name, smarts in self.EWG_SMARTS.items():
+                pattern = Chem.MolFromSmarts(smarts)
+                if pattern is None:
                     continue
-                
-                matches.append((alpha_idx, beta_idx, ewg_name))
-        
-        return matches
+
+                match_indices = self.reactant_rdmol.GetSubstructMatches(pattern)
+                # ex. match_indices= ((1, 0, 2, 3, 4),)
+                if match_indices:
+                    map_to_idx = {}
+                    for a in pattern.GetAtoms():
+                        map_num = a.GetAtomMapNum()
+                        # unmapped atoms have map number of 0
+                        if map_num > 0:
+                            map_to_idx[map_num] = match_indices[0][a.GetIdx()]
+    
+                    alpha_idx = map_to_idx.get(1)
+                    beta_idx = map_to_idx.get(2)
+                    pair = (alpha_idx, beta_idx)
+                    if pair in seen_pairs:
+                        continue  # already found via a more specific pattern
+                    
+                    # ── Validate the double bond at Cα=Cβ ─────────────────────
+                    bond = self.reactant_rdmol.GetBondBetweenAtoms(alpha_idx, beta_idx)
+                    if bond is None or bond.GetBondTypeAsDouble() < 1.9:
+                        continue
+                        
+                    seen_pairs.add(pair)
+                    matches.append((alpha_idx, beta_idx, ewg_name))
+                    
+            self.sites = matches
+            if not self.sites:
+                raise NotImplementedError(
+                    f"Acceptor pattern not detected in: {self.reactant_smiles}\n"
+                    f"Supported EWGs: {list(self.EWG_SMARTS.keys())}\n"
+                    f"You can manually specify alpha_idx and beta_idx to override."
+                )
+
+            if self.verbose:
+                print(f"  Detected {len(self.sites)} Michael acceptor site(s):")
+                for a, b, ewg in self.sites:
+                    print(f"    α-C idx= {a}  β-C idx= {b}  EWG= {ewg}")
+
+            # Use the first (most specifically matched) site
+            self.alpha_idx, self.beta_idx, self.ewg = self.sites[0]
+        else:
+            self.ewg = "user_defined"
+            if self.verbose:
+                print(f"  Using user-specified α-C idx={self.alpha_idx}, β-C idx={self.beta_idx}")
 
 
     def _build_intermediate_and_product(self) -> None:
@@ -218,66 +246,30 @@ class Reaction:
         
         Raises:
             ValueError: if no Michael acceptor pattern is found and no indices given
-        """
-        # ── Step 2: Detect Michael acceptor site(s) ───────────────────────────────
-        if self.alpha_idx is None or self.beta_idx is None:
-            self.sites = self._find_michael_acceptor_atoms()
-            if not self.sites:
-                raise NotImplementedError(
-                    f"Acceptor pattern not detected in: {self.reactant_smiles}\n"
-                    f"Supported EWGs: {list(self.EWG_SMARTS.keys())}\n"
-                    f"You can manually specify alpha_idx and beta_idx to override."
-                )
-
-            if self.verbose:
-                print(f"  Detected {len(self.sites)} Michael acceptor site(s):")
-                for a, b, ewg in self.sites:
-                    print(f"    α-C idx= {a}  β-C idx= {b}  EWG= {ewg}")
-
-            # Use the first (most specifically matched) site
-            self.alpha_idx, self.beta_idx, self.ewg = self.sites[0]
-        else:
-            self.ewg = "user_defined"
-            if self.verbose:
-                print(f"  Using user-specified α-C idx={self.alpha_idx}, β-C idx={self.beta_idx}")
-        
-        # ── Step 3: Validate the Cα=Cβ bond ──────────────────────────────────────
-        bond = self.reactant_rdmol.GetBondBetweenAtoms(self.alpha_idx, self.beta_idx)
-        if bond is None:
-            raise ValueError(f"No bond between atom {self.alpha_idx} and {self.beta_idx}")
-        if bond.GetBondTypeAsDouble() < 1.9:
-            raise ValueError(
-                f"Bond between {self.alpha_idx} and {self.beta_idx} is not a double bond "
-                f"(bond order = {bond.GetBondTypeAsDouble():.1f})"
-            )
-        
-        
-        # ── Step 4: Modify molecule — build carbanion ─────────────────────────────
+        """        
+        # ── Build carbanion ─────────────────────────────
         self.reactant_rdmol.GetAtomWithIdx(self.beta_idx).SetAtomMapNum(self.map_Cb)
         self.reactant_rdmol.GetAtomWithIdx(self.alpha_idx).SetAtomMapNum(self.map_Ca)
         self.reactant_smiles = Chem.MolToSmiles(self.reactant_rdmol)
 
         edit_mol = Chem.RWMol(self.reactant_rdmol)
-
-        # edit_mol.GetAtomWithIdx(self.beta_idx).SetAtomMapNum(self.map_Cb)
-        # edit_mol.GetAtomWithIdx(self.alpha_idx).SetAtomMapNum(self.map_Ca)
         
-        # 4a. Convert Cα=Cβ double bond → single bond
+        # a. Convert Cα=Cβ double bond → single bond
         edit_mol.RemoveBond(self.alpha_idx, self.beta_idx)
         edit_mol.AddBond(self.alpha_idx, self.beta_idx, Chem.BondType.SINGLE)
         
-        # 4b. Assign formal charge -1 to α-carbon
+        # b. Assign formal charge -1 to α-carbon
         alpha_atom = edit_mol.GetAtomWithIdx(self.alpha_idx)
         alpha_atom.SetFormalCharge(-1)
         
-        # 4c. Attach thiolate (ex. -SCH3) to β-carbon
+        # c. Attach thiolate (ex. -SCH3) to β-carbon
         #     Parse thiolate fragment and merge into molecule
         thiol_mol = Chem.MolFromSmiles(self.thiol_smiles)
         if thiol_mol is None:
             raise ValueError(f"Invalid thiolate SMILES: {self.thiol_smiles}")
         thiol_mol = Chem.AddHs(thiol_mol)
         
-        # 4d. Find the sulfur atom (or attachment point) in the thiol_mol
+        # d. Find the sulfur atom (or attachment point) in the thiol_mol
         s_atom_idx_in_thiol = None
         for atom in thiol_mol.GetAtoms():
             if atom.GetAtomicNum() == 16: # sulfur
@@ -288,20 +280,20 @@ class Reaction:
         
         thiol_mol.GetAtomWithIdx(s_atom_idx_in_thiol).SetAtomMapNum(self.map_S)
 
-        # 4f. Combine the two molecules
+        # f. Combine the two molecules
         # Atom indices - Chem.CombineMols simply concatenates the atom lists of the input molecules. 
         # The atoms from your first molecule keep their original indices (starting at 0), 
         # while the atoms from the second molecule are shifted by the size of the first molecule.
         # So, alpha_idx and beta_idx should be the same in the combined molecule.
         combined = Chem.RWMol(Chem.CombineMols(edit_mol, thiol_mol))
         
-        # 4g. Bond β-carbon to sulfur
+        # g. Bond β-carbon to sulfur
         # s_idx_combined = edit_mol.GetNumAtoms() + s_atom_idx_in_thiol
         s_idx_combined = next(a.GetIdx() for a in combined.GetAtoms() if a.GetAtomMapNum() == self.map_S)
         # Sulfur atom index in the combined molecule
         combined.AddBond(self.beta_idx, s_idx_combined, Chem.BondType.SINGLE)
         
-        # ── Step 5: Remove one H from sulfur (it was SH, now S-) ──────────────────
+        # ── Remove one H from sulfur (it was SH, now S-) ──────────────────
         s_atom = combined.GetAtomWithIdx(s_idx_combined)
         sh_to_remove = None
         for neighbor in s_atom.GetNeighbors():
@@ -311,7 +303,7 @@ class Reaction:
         if sh_to_remove is not None:
             combined.RemoveAtom(sh_to_remove)
         
-        # ── Step 6: Sanitize and generate SMILES ──────────────────────────────────
+        # ── Sanitize and generate SMILES ──────────────────────────────────
         try:
             Chem.SanitizeMol(combined)
         except Exception as e:
@@ -336,7 +328,7 @@ class Reaction:
         if (self.carbanion_charge - self.reactant_charge) != -1:
             raise ValueError(f"Unexpected charge: reactant: {self.reactant_charge} carbanion: {self.carbanion_charge}")
 
-        # ── Step 7: Product SMILES ────────────────────────────────────────────────────
+        # ── Product SMILES ────────────────────────────────────────────────────
         alpha_atom = None
         for atom in combined.GetAtoms():
             if atom.GetFormalCharge() == -1:
@@ -360,15 +352,9 @@ class Reaction:
         
         if self.verbose:
             print()
-            print(f"  Reactant                 : {self.reactant_smiles}")
-            print(f"    charge                 : {self.reactant_charge}")
-            print(f"    # of reaction sites    : {len(self.sites)}")
-            print(f"    EWG                    : {self.ewg}")
-            print(f"    Cα, Cβ indices         : {self.alpha_idx},{self.beta_idx}")
-            print(f"  Thiol                    : {self.thiol_smiles}")
-            print(f"  α-carbanion intermediate : {self.carbanion_smiles}")
-            print(f"    charge                 : {self.carbanion_charge}")
-            print(f"    Cα, Cβ, S indices      : {self.carbanion_alpha_idx},{self.carbanion_beta_idx},{self.carbanion_S_idx}")
-            print(f"  Product                  : {self.product_smiles}")
-            print(f"    charge                 : {self.product_charge}")
-            print(f"    Cα, Cβ, S indices      : {self.product_alpha_idx},{self.product_beta_idx},{self.product_S_idx}")
+            print(f"  Reactant    Q={self.reactant_charge:+1d} Cα={self.alpha_idx} Cβ={self.beta_idx}")
+            print(f"    {self.reactant_smiles}")
+            print(f"  α-carbanion Q={self.carbanion_charge:+1d} Cα={self.carbanion_alpha_idx} Cβ={self.carbanion_beta_idx} S={self.carbanion_S_idx}")
+            print(f"    {self.carbanion_smiles}")
+            print(f"  Product     Q={self.product_charge:+1d} Cα={self.product_alpha_idx} Cβ={self.product_beta_idx} S={self.product_S_idx}")
+            print(f"    {self.product_smiles}")

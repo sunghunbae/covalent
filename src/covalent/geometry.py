@@ -205,19 +205,24 @@ class Geometry():
         self.update_coords(coords)
 
 
-    def write_xyz(self, output_path: Path | str, overwrite: bool = False) -> None:
+    def write_xyz(self) -> str:
         lines : list[str] = [f"{self.natoms}", " "]
         for e, (x, y, z) in zip(self.symbols, self.coords):
             lines.append(f"{e:5} {x:23.14f} {y:23.14f} {z:23.14f}")
+        return '\n'.join(lines)
+
+
+    def write_xyz_file(self, output_path: Path | str, overwrite: bool = False) -> None:
+        contents = self.write_xyz()
         if isinstance(output_path, str):
             output_path = Path(output_path)
         with open(output_path, "w" if overwrite else "x") as f:
             # x mode will raise an error if the file already exists, 
             # preventing accidental overwrites
-            f.write("\n".join(lines))
+            f.write(contents)
 
 
-    def write_sdf(self, output_path: Path | str, overwrite: bool = False) -> None:
+    def write_sdf_file(self, output_path: Path | str, overwrite: bool = False) -> None:
         if self.rdmol is None:
             raise ValueError("No RDKit molecule available to write SDF.")
         if isinstance(output_path, str):

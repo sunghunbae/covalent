@@ -1,6 +1,6 @@
 [project]
 name = "covalent"
-version = "0.1.0"
+version = "0.2.0"
 authors = [{name = "Sung-Hun Bae", email = "sunghun.bae@gmail.com"}]
 requires-python = ">= 3.12"
 
@@ -17,6 +17,10 @@ packages = ["src/covalent"]
 [tool.hatch.build]
 include = [ "src/covalent/methylthiol/*.xyz", ]
 
+[project.scripts]
+setup_xyz = "covalent.cli:setup_xyz"
+run_aimnet2_workflow = "covalent.cli:run_aimnet2_workflow"
+
 [tool.pixi.tasks]
 
 [tool.pixi.dependencies]
@@ -25,3 +29,4 @@ psi4 = ">=1.10,<2"
 rdkit = ">=2026.3.1,<2027"
 pyddx = ">=0.7.0,<0.8"
 pytest = ">=9.0.3,<10"
+tqdm = ">=4.68.3,<5"
