@@ -4,9 +4,11 @@ from rdkit.Chem import AllChem
 from typing import Self
 import covalent.utils
 
-
 class Reaction:
     """
+    Supported reaction(s):
+        - Michael addtion
+
     Given a Michael acceptor SMILES, constructs the corresponding α-carbanion intermediate SMILES
     formed after thiolate attack. 
     The class auto-detects the α/β carbons and EWG type based on SMARTS patterns.
@@ -48,7 +50,7 @@ class Reaction:
 
     def __init__(self, 
                  reactant: str | Chem.Mol | None = None,
-                 thiol_smiles: str = "SC",
+                 thiol_smiles: str = "SC", # nucleophile
                  alpha_idx: int | None = None,
                  beta_idx: int | None = None,
                  map_Ca: int = 91,
@@ -220,7 +222,7 @@ class Reaction:
             self.ewg = "user_defined"
             if self.verbose:
                 print(f"  Using user-specified α-C idx={self.alpha_idx}, β-C idx={self.beta_idx}")
-
+                
 
     def _build_intermediate_and_product(self) -> None:
         """
@@ -352,9 +354,15 @@ class Reaction:
         
         if self.verbose:
             print()
-            print(f"  Reactant    Q={self.reactant_charge:+1d} Cα={self.alpha_idx} Cβ={self.beta_idx}")
-            print(f"    {self.reactant_smiles}")
-            print(f"  α-carbanion Q={self.carbanion_charge:+1d} Cα={self.carbanion_alpha_idx} Cβ={self.carbanion_beta_idx} S={self.carbanion_S_idx}")
-            print(f"    {self.carbanion_smiles}")
-            print(f"  Product     Q={self.product_charge:+1d} Cα={self.product_alpha_idx} Cβ={self.product_beta_idx} S={self.product_S_idx}")
-            print(f"    {self.product_smiles}")
+            print(f"  Reactant                 : {self.reactant_smiles}")
+            print(f"    charge                 : {self.reactant_charge}")
+            print(f"    # of reaction sites    : {len(self.sites)}")
+            print(f"    EWG                    : {self.ewg}")
+            print(f"    Cα, Cβ indices         : {self.alpha_idx},{self.beta_idx}")
+            print(f"  Thiol                    : {self.thiol_smiles}")
+            print(f"  α-carbanion intermediate : {self.carbanion_smiles}")
+            print(f"    charge                 : {self.carbanion_charge}")
+            print(f"    Cα, Cβ, S indices      : {self.carbanion_alpha_idx},{self.carbanion_beta_idx},{self.carbanion_S_idx}")
+            print(f"  Product                  : {self.product_smiles}")
+            print(f"    charge                 : {self.product_charge}")
+            print(f"    Cα, Cβ, S indices      : {self.product_alpha_idx},{self.product_beta_idx},{self.product_S_idx}")

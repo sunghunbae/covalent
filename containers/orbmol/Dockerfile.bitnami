@@ -1,0 +1,21 @@
+FROM bitnami/pytorch:latest
+
+ARG USER=appuser
+ARG UID=1000
+ARG GID=1000
+
+USER root
+
+RUN groupadd -g ${GID} ${USER} \
+    && useradd --uid ${UID} --gid ${GID} -m -s /bin/bash ${USER} \
+    && tdnf check-update \
+    && tdnf install -y git gcc build-essential
+
+RUN pip install --no-cache-dir orb-models
+
+USER ${USER}
+
+# pretrained weights will be saved at $HOME/.cache/
+ENV HOME=/home/${USER}
+
+WORKDIR /home/${USER}

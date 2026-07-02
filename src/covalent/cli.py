@@ -6,6 +6,8 @@ import csv
 import sqlite3
 import argparse
 import sys
+import os
+import rich
 
 from enum import Enum
 from io import StringIO
@@ -13,7 +15,103 @@ from pathlib import Path
 from rdkit import Chem
 from tqdm import tqdm
 
-from covalent import Geometry, Reaction
+from covalent import prune, Geometry, Reaction
+
+
+def dbinfo():
+    parser = argparse.ArgumentParser(description="Display sqlite3 db",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("db", type=str, help="sqlite3 .db file")
+    args = parser.parse_args()
+    
+    # Force the terminal stream to accept UTF-8 encoding
+    sys.stdout.reconfigure(encoding='utf-8')
+
+    file_size_kb = os.path.getsize(args.db) / 1024
+    rich.print(f"📁 {args.db} ({file_size_kb:.0f} KB)")    
+    
+    try:
+        conn = sqlite3.connect(args.db)
+        cursor = conn.cursor()
+        
+        cursor.execute("PRAGMA integrity_check;")
+        integrity = cursor.fetchone()[0]
+        rich.print(f"[bold green]🟢[/bold green] Integrity Check: {integrity}")  # Expects 'ok'
+        
+        cursor.execute("SELECT sqlite_version();")
+        version = cursor.fetchone()[0]
+        rich.print(f"[bold green]🟢[/bold green] SQLite Version: {version}")
+    
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = [row[0] for row in cursor.fetchall() if not row[0].startswith('sqlite')]
+        rich.print(f"[bold green]🟢[/bold green] Table Names ({len(tables)}): {', '.join(tables)}")
+        
+        for table_name in tables:
+            rich.print(f"  [bold green]🟢[/bold green] {table_name}")
+            # Use LIMIT 0 so you don't load any actual data rows into memory
+            # Use an f-string to inject the table name safely with backticks
+            
+            cursor.execute(f"SELECT * FROM `{table_name}` LIMIT 0;")
+            # Extract the first element (the name) from each column tuple
+            column_names = [description[0] for description in cursor.description]
+            rich.print(f"    [bold green]🟢[/bold green] Columne Names ({len(column_names)}): {', '.join(column_names)}")
+            
+            cursor.execute(f"SELECT COUNT(*) FROM `{table_name}`;")
+            total_rows = cursor.fetchone()[0]
+            rich.print(f"    [bold green]🟢[/bold green] Number of records: {total_rows}")
+            
+    except sqlite3.Error as e:
+        rich.print(f"[bold red]🔴[/bold red] Corrupted or not a valid SQLite database. Error: {e}")
+    finally:
+        if 'conn' in locals():
+            conn.close()
+
+
+def prune_smi():
+    parser = argparse.ArgumentParser(description="Prune SMILES file",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("smi", type=str, help="input SMILES file")
+    parser.add_argument("--name-startswith", type=str, help="filter for name")
+    parser.add_argument("--cap-pruned-atom", type=int, default=1, help="cap pruned/cut atom number")
+    args = parser.parse_args()
+
+    outfile = Path(args.smi).with_suffix(".pruned.smi")
+
+    batch = []
+    with open(args.smi, "r") as f:
+        for line in f:
+            smi, name = line.strip().split()
+            if args.name_startswith and (not name.startswith(args.name_startswith)):
+                continue
+            mol = Chem.MolFromSmiles(smi)
+            if not mol:
+                continue
+            mol.SetProp("_Name", name)
+            batch.append((mol, smi, name))
+
+    with tqdm(batch, total= len(batch)) as pbar, open(outfile, "w") as out:
+        for mol, smi, name in batch:
+            pbar.set_postfix_str(f"processing: {name}")
+            try:
+                rxn = Reaction(reactant=mol, thiol_smiles="SC", verbose=False)
+            except:
+                # no implemented pattern detected
+                print(f"Skipping {name}. Reaction pattern Not Found")
+                continue
+            
+            frag = prune(mol,
+                        center=(rxn.alpha_idx, rxn.beta_idx), 
+                        cap_dummy_atom=args.cap_pruned_atom, 
+                        verbose=False)
+            if frag:
+                # select the smallest fragment
+                na, frag_mol, frag_center = sorted(frag, key=lambda x: x[0])[0]
+                frag_smi = Chem.MolToSmiles(Chem.RemoveHs(frag_mol))
+                out.write(f"{frag_smi} {name}\n")
+            else: 
+                # if no pruned fragment candidate is returned, use the intact structure
+                out.write(f"{smi} {name}\n")
+            pbar.update(1)
 
 
 def setup_xyz():
@@ -23,11 +121,38 @@ def setup_xyz():
     parser.add_argument("db", type=str, help="output sqlite3 .db file")
     parser.add_argument("--name-startswith", type=str, help="filter for name")
     parser.add_argument("--conformers", type=int, default=10, help="maximim number of conformers")
+    parser.add_argument("--count", action="store_true", help="just count the number of entries and exit")
+    parser.add_argument("--prune", action="store_true", help="prune molecules to smaller fragments")
+    parser.add_argument("--cap-pruned-atom", type=int, default=1, help="cap pruned/cut atom number")
     parser.add_argument("--skip-xtb-opt", action="store_true", help="skip xtb geometry optimization")
     args = parser.parse_args()
 
+    conformers = {}
+    batch = []
+
+    with gzip.open(args.sdf, "rb") as f:
+        with Chem.ForwardSDMolSupplier(f) as supp:
+            for mol in supp:
+                name = mol.GetProp("_Name")
+                if args.name_startswith and (not name.startswith(args.name_startswith)):
+                    continue
+                if name in conformers:
+                    conformers[name] += 1
+                else:
+                    conformers[name] = 1
+                if conformers[name] > args.conformers:
+                    continue
+                confid = f"{name}.{conformers[name]}"
+                batch.append((confid, mol))
+    
+    if args.count:
+        print(f"Number of conformers to be processed = {len(batch)}.")
+        sys.exit(0)
+
     with sqlite3.connect(args.db) as conn:
         cursor = conn.cursor()
+
+        # create database table
         cursor.execute("""CREATE TABLE IF NOT EXISTS reaction (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
@@ -38,35 +163,33 @@ def setup_xyz():
             beta INTEGER,
             xyz TEXT )""")
         conn.commit()
-
-        conformers = {}
-        batch = []
-
-        with gzip.open(args.sdf, "rb") as f:
-            with Chem.ForwardSDMolSupplier(f) as supp:
-                for mol in supp:
-                    name = mol.GetProp("_Name")
-                    if args.name_startswith and (not name.startswith(args.name_startswith)):
-                        continue
-                    if name in conformers:
-                        conformers[name] += 1
-                    else:
-                        conformers[name] = 1
-                    if conformers[name] > args.conformers:
-                        continue
-                    confid = f"{name}.{conformers[name]}"
-                    batch.append((confid, mol))
-                    
+ 
         with tqdm(batch, total= len(batch)) as pbar: 
             for confid, mol in batch:
                 pbar.set_postfix_str(f"processing: {confid}")
+                
                 smiles = Chem.MolToSmiles(mol)
+
                 try:
                     rxn = Reaction(reactant=mol, thiol_smiles="SC", verbose=False)
                 except:
                     # no implemented pattern detected
-                    print(f"Skipping {confid} because applicable reaction pattern is not found")
+                    print(f"Skipping {confid}. Reaction pattern Not Found")
                     continue
+
+                if args.prune:
+                    frag = prune(mol, 
+                                 center=(rxn.alpha_idx, rxn.beta_idx), 
+                                 cap_dummy_atom=args.cap_pruned_atom, 
+                                 verbose=False)
+                    if frag:
+                        # select the smallest fragment
+                        na, frag_mol, frag_center = sorted(frag, key=lambda x: x[0])[0]
+                        rxn = Reaction(reactant=frag_mol, thiol_smiles="SC", verbose=False)
+                    else: 
+                        # if no pruned fragment candidate is returned, use the intact structure
+                        pass
+
 
                 for (rc, smiles_, charge_, alpha, beta, geom) in [
                     ('reactant', 
@@ -98,10 +221,9 @@ def setup_xyz():
                         """, (confid, rc, smiles_, charge_, alpha, beta, geom.write_xyz())
                         )
                 pbar.update(1)
-                
-        conn.commit()
-        
+                conn.commit()
     conn.close()
+
 
 
 def run_aimnet2_workflow():
@@ -175,6 +297,7 @@ def run_aimnet2_workflow():
                 'E(opt, kcal/mol)', 'time(opt, sec)', 'E(rattled, kcal/mol)', 'E(initial, kcal/mol)'])
             writer.writeheader()
 
+            prev_name = ""
             for row in workload:
                 row_id, name, rc, smiles, charge, alpha_idx, beta_idx, xyz = row
                 print(f"Processing {name} ...")
@@ -254,3 +377,13 @@ def run_aimnet2_workflow():
                     """,
                         (name, rc, smiles, charge, alpha_idx, beta_idx, string_buffer.getvalue())
                     )
+                
+                if prev_name and prev_name != name:
+                    conn.commit()
+
+                prev_name = name
+                
+
+
+def run_psi4_workflow():
+    raise NotImplementedError

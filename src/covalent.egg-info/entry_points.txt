@@ -1,2 +1,6 @@
 [console_scripts]
-setup = covalent.cli:setup_workflow
+dbinfo = covalent.cli:dbinfo
+prune_smi = covalent.cli:prune_smi
+run_aimnet2_workflow = covalent.cli:run_aimnet2_workflow
+run_psi4_workflow = covalent.cli:run_psi4_workflow
+setup_xyz = covalent.cli:setup_xyz

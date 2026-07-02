@@ -18,8 +18,11 @@ packages = ["src/covalent"]
 include = [ "src/covalent/methylthiol/*.xyz", ]
 
 [project.scripts]
+dbinfo = "covalent.cli:dbinfo"
+prune_smi = "covalent.cli:prune_smi"
 setup_xyz = "covalent.cli:setup_xyz"
 run_aimnet2_workflow = "covalent.cli:run_aimnet2_workflow"
+run_psi4_workflow = "covalent.cli:run_psi4_workflow"
 
 [tool.pixi.tasks]
 
@@ -30,3 +33,4 @@ rdkit = ">=2026.3.1,<2027"
 pyddx = ">=0.7.0,<0.8"
 pytest = ">=9.0.3,<10"
 tqdm = ">=4.68.3,<5"
+rich = ">=15.0.0,<16"

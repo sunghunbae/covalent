@@ -1,7 +1,0 @@
-#Interface settings
-
-#fixpka :   
-    -in  original_rc.smi
-    -ionize  7.4
-    -out  original_rc_fixpka.smi
-    #-prefix  fixpka
